@@ -1,0 +1,242 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-globe"></i> Web Vulnerability Scanner</h4>
+            </div>
+            <div class="card-body">
+                <!-- Scan Form -->
+                <div id="scan-form">
+                    <div class="mb-3">
+                        <label for="target-url" class="form-label">Target URL</label>
+                        <input type="url" class="form-control" id="target-url" 
+                               placeholder="https://example.com" required>
+                        <div class="form-text">Enter the target website URL to scan for vulnerabilities</div>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-lg" id="start-scan">
+                        <i class="fas fa-search"></i> Start Scan
+                    </button>
+                </div>
+
+                <!-- Progress Section -->
+                <div id="progress-container" class="progress-container mt-4">
+                    <h5>Scanning Progress</h5>
+                    <div class="progress mb-3">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             id="progress-bar" role="progressbar" style="width: 0%">
+                            0%
+                        </div>
+                    </div>
+                    <p id="current-task" class="text-muted">Initializing...</p>
+                    <button type="button" class="btn btn-secondary" id="stop-scan" disabled>
+                        <i class="fas fa-stop"></i> Stop Scan
+                    </button>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results-container" class="results-container mt-4">
+                    <h5>Scan Results</h5>
+                    
+                    <!-- Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3 id="total-vulns" class="text-primary">0</h3>
+                                    <p class="mb-0">Total Vulnerabilities</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3 id="high-vulns" class="severity-high">0</h3>
+                                    <p class="mb-0">High</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3 id="medium-vulns" class="severity-medium">0</h3>
+                                    <p class="mb-0">Medium</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h3 id="low-vulns" class="severity-low">0</h3>
+                                    <p class="mb-0">Low</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Download Buttons -->
+                    <div class="mb-4">
+                        <button type="button" class="btn btn-success me-2" id="download-json">
+                            <i class="fas fa-download"></i> Download JSON Report
+                        </button>
+                        <button type="button" class="btn btn-info" id="download-md">
+                            <i class="fas fa-download"></i> Download Markdown Report
+                        </button>
+                    </div>
+
+                    <!-- Detailed Results -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Vulnerability Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="vulnerability-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Section -->
+                <div id="error-container" class="alert alert-danger" style="display: none;">
+                    <strong>Error:</strong> <span id="error-message"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    let statusInterval;
+    
+    $('#start-scan').click(function() {
+        const url = $('#target-url').val();
+        if (!url) {
+            alert('Please enter a target URL');
+            return;
+        }
+        
+        startScan(url);
+    });
+    
+    function startScan(url) {
+        // Hide previous results and errors
+        $('#results-container').hide();
+        $('#error-container').hide();
+        
+        // Show progress container
+        $('#progress-container').show();
+        $('#start-scan').prop('disabled', true);
+        
+        $.ajax({
+            url: '/api/scan',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({url: url}),
+            success: function(response) {
+                // Start polling for status updates
+                statusInterval = setInterval(checkStatus, 1000);
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON ? xhr.responseJSON.error : 'Unknown error';
+                showError(error);
+                resetUI();
+            }
+        });
+    }
+    
+    function checkStatus() {
+        $.ajax({
+            url: '/api/status',
+            method: 'GET',
+            success: function(status) {
+                updateProgress(status);
+                
+                if (!status.running) {
+                    clearInterval(statusInterval);
+                    
+                    if (status.error) {
+                        showError(status.error);
+                        resetUI();
+                    } else if (status.results) {
+                        showResults(status.results);
+                        resetUI();
+                    }
+                }
+            }
+        });
+    }
+    
+    function updateProgress(status) {
+        const progress = status.progress || 0;
+        $('#progress-bar').css('width', progress + '%').text(progress + '%');
+        $('#current-task').text(status.current_task || 'Processing...');
+    }
+    
+    function showResults(results) {
+        $('#progress-container').hide();
+        $('#results-container').show();
+        
+        // Update summary
+        $('#total-vulns').text(results.total_vulnerabilities);
+        $('#high-vulns').text(results.vulnerabilities_by_severity.High || 0);
+        $('#medium-vulns').text(results.vulnerabilities_by_severity.Medium || 0);
+        $('#low-vulns').text(results.vulnerabilities_by_severity.Low || 0);
+        
+        // Set download buttons
+        $('#download-json').click(() => downloadReport(results.json_report));
+        $('#download-md').click(() => downloadReport(results.md_report));
+        
+        // Display vulnerability details
+        displayVulnerabilities(results.findings);
+    }
+    
+    function displayVulnerabilities(findings) {
+        const container = $('#vulnerability-list');
+        container.empty();
+        
+        if (findings.length === 0) {
+            container.html('<p class="text-success">🎉 No vulnerabilities found!</p>');
+            return;
+        }
+        
+        findings.forEach((finding, index) => {
+            const severityClass = `severity-${finding.severity.toLowerCase()}`;
+            const card = $(`
+                <div class="card mb-2">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">${finding.vulnerability}</h6>
+                        <span class="badge bg-secondary ${severityClass}">${finding.severity}</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>URL:</strong> <code>${finding.url}</code></p>
+                        ${finding.payload ? `<p><strong>Payload:</strong> <code>${finding.payload}</code></p>` : ''}
+                        <p><strong>Description:</strong> ${finding.description}</p>
+                    </div>
+                </div>
+            `);
+            container.append(card);
+        });
+    }
+    
+    function downloadReport(filename) {
+        window.location.href = `/api/download/${filename}`;
+    }
+    
+    function showError(message) {
+        $('#error-message').text(message);
+        $('#error-container').show();
+    }
+    
+    function resetUI() {
+        $('#start-scan').prop('disabled', false);
+        $('#progress-container').hide();
+        $('#progress-bar').css('width', '0%').text('0%');
+    }
+});
+</script>
+{% endblock %}
