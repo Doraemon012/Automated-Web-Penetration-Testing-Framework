@@ -1,0 +1,248 @@
+[
+    
+    {
+        "vulnerability": "Missing Content-Security-Policy",
+        "url": "http://testphp.vulnweb.com",
+        "payload": null,
+        "severity": "Medium",
+        "description": "Helps prevent XSS"
+    },
+    {
+        "vulnerability": "Missing Strict-Transport-Security",
+        "url": "http://testphp.vulnweb.com",
+        "payload": null,
+        "severity": "Medium",
+        "description": "Enforces HTTPS"
+    },
+    {
+        "vulnerability": "HTTPS not enforced",
+        "url": "http://testphp.vulnweb.com",
+        "payload": null,
+        "severity": "High",
+        "description": "Website should enforce HTTPS for security"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/search.php?test=query",
+        "payload": "' OR '1'='1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/search.php?test=query",
+        "payload": "' OR 1=1 --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/search.php?test=query",
+        "payload": "\" OR \"1\"=\"1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/search.php?test=query",
+        "payload": "'; WAITFOR DELAY '0:0:5' --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/search.php?test=query",
+        "payload": "' OR '1'='1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/search.php?test=query",
+        "payload": "' OR 1=1 --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/search.php?test=query",
+        "payload": "\" OR \"1\"=\"1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/search.php?test=query",
+        "payload": "'; WAITFOR DELAY '0:0:5' --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/guestbook.php",
+        "payload": "' OR '1'='1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/guestbook.php",
+        "payload": "' OR 1=1 --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/guestbook.php",
+        "payload": "\" OR \"1\"=\"1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/guestbook.php",
+        "payload": "'; WAITFOR DELAY '0:0:5' --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/guestbook.php",
+        "payload": "' OR '1'='1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/guestbook.php",
+        "payload": "' OR 1=1 --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/guestbook.php",
+        "payload": "\" OR \"1\"=\"1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/guestbook.php",
+        "payload": "'; WAITFOR DELAY '0:0:5' --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/userinfo.php",
+        "payload": "' OR '1'='1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/userinfo.php",
+        "payload": "' OR 1=1 --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/userinfo.php",
+        "payload": "\" OR \"1\"=\"1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/userinfo.php",
+        "payload": "'; WAITFOR DELAY '0:0:5' --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/userinfo.php",
+        "payload": "' OR '1'='1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/userinfo.php",
+        "payload": "' OR 1=1 --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/userinfo.php",
+        "payload": "\" OR \"1\"=\"1",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Possible SQL Injection",
+        "url": "http://testphp.vulnweb.com/userinfo.php",
+        "payload": "'; WAITFOR DELAY '0:0:5' --",
+        "severity": "High",
+        "description": "Database error message detected"
+    },
+    {
+        "vulnerability": "Reflected XSS",
+        "url": "http://testphp.vulnweb.com/search.php?test=query",
+        "payload": "<script>alert(1)</script>",
+        "severity": "High",
+        "description": "Payload reflected unescaped in response"
+    },
+    {
+        "vulnerability": "Reflected XSS",
+        "url": "http://testphp.vulnweb.com/search.php?test=query",
+        "payload": "'\"><img src=x onerror=alert(1)>",
+        "severity": "High",
+        "description": "Payload reflected unescaped in response"
+    },
+    {
+        "vulnerability": "Reflected XSS",
+        "url": "http://testphp.vulnweb.com/guestbook.php",
+        "payload": "<script>alert(1)</script>",
+        "severity": "High",
+        "description": "Payload reflected unescaped in response"
+    },
+    {
+        "vulnerability": "Reflected XSS",
+        "url": "http://testphp.vulnweb.com/guestbook.php",
+        "payload": "'\"><img src=x onerror=alert(1)>",
+        "severity": "High",
+        "description": "Payload reflected unescaped in response"
+    },
+    {
+        "vulnerability": "Open Redirect",
+        "url": "http://testphp.vulnweb.com/Mod_Rewrite_Shop?next=https://evil.com",
+        "payload": "https://evil.com",
+        "severity": "Medium",
+        "description": "Open redirect detected"
+    },
+    {
+        "vulnerability": "Open Redirect",
+        "url": "http://testphp.vulnweb.com/Mod_Rewrite_Shop?next=//evil.com",
+        "payload": "//evil.com",
+        "severity": "Medium",
+        "description": "Open redirect detected"
+    },
+    {
+        "vulnerability": "Open Redirect",
+        "url": "http://testphp.vulnweb.com/hpp?next=https://evil.com",
+        "payload": "https://evil.com",
+        "severity": "Medium",
+        "description": "Open redirect detected"
+    },
+    {
+        "vulnerability": "Open Redirect",
+        "url": "http://testphp.vulnweb.com/hpp?next=//evil.com",
+        "payload": "//evil.com",
+        "severity": "Medium",
+        "description": "Open redirect detected"
+    }
+]
