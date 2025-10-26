@@ -1,0 +1,65 @@
+{
+    "target_url": "https://www.google.com",
+    "total_vulnerabilities": 4,
+    "vulnerabilities_by_severity": {
+        "Low": 3,
+        "Medium": 1
+    },
+    "scan_time": "2025-10-15T11:14:37.660374",
+    "mode": "safe",
+    "auth_used": false,
+    "findings": [
+        {
+            "vulnerability": "Weak X-XSS-Protection configuration",
+            "url": "https://www.google.com",
+            "payload": "0",
+            "severity": "Low",
+            "description": "Enables browser XSS filtering (legacy) - Current value may be insufficient",
+            "evidence": "Header 'X-XSS-Protection' present with value: 0",
+            "recommendation": "Consider using stronger values: 1; mode=block",
+            "cwe": "CWE-79",
+            "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N",
+            "cvss_score": 3.1,
+            "confidence": "Probable"
+        },
+        {
+            "vulnerability": "Missing Referrer-Policy",
+            "url": "https://www.google.com",
+            "payload": null,
+            "severity": "Low",
+            "description": "Controls referrer information disclosure",
+            "evidence": "Header 'Referrer-Policy' not present in response",
+            "recommendation": "Add 'Referrer-Policy' header to response",
+            "cwe": "CWE-000",
+            "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N",
+            "cvss_score": 3.1,
+            "confidence": "Tentative"
+        },
+        {
+            "vulnerability": "Missing Permissions-Policy",
+            "url": "https://www.google.com",
+            "payload": null,
+            "severity": "Low",
+            "description": "Controls browser feature permissions",
+            "evidence": "Header 'Permissions-Policy' not present in response",
+            "recommendation": "Add 'Permissions-Policy' header to response",
+            "cwe": "CWE-000",
+            "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N",
+            "cvss_score": 3.1,
+            "confidence": "Tentative"
+        },
+        {
+            "vulnerability": "Potential missing CSRF token in form",
+            "url": "https://www.google.com",
+            "payload": null,
+            "severity": "Medium",
+            "description": "Form appears to lack a CSRF token field",
+            "evidence": "Form index 0 has no recognizable CSRF token",
+            "recommendation": "Include server-generated CSRF token in forms and validate on submit",
+            "cwe": "CWE-000",
+            "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+            "cvss_score": 5.5,
+            "confidence": "Tentative"
+        }
+    ]
+}

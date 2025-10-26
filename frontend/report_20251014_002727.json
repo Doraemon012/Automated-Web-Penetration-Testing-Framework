@@ -1,0 +1,9 @@
+{
+    "target_url": "https://www.google.com",
+    "total_vulnerabilities": 0,
+    "vulnerabilities_by_severity": {},
+    "scan_time": "2025-10-14T00:27:27.650877",
+    "mode": "ultra-safe",
+    "auth_used": false,
+    "findings": []
+}

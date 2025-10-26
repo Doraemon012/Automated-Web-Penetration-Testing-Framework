@@ -1,0 +1,818 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulnerability Report - https://music.youtube.com</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <style>
+        body {
+            background-color: #0a0c10;
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            background: rgba(26, 29, 46, 0.7);
+            border: 1px solid rgba(0, 191, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .text-primary { color: #00bfff !important; }
+        .severity-high { color: #ff4500 !important; }
+        .severity-medium { color: #ffc107 !important; }
+        .severity-low { color: #20c997 !important; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h1 class="mb-0"><i class="fas fa-shield-alt text-primary me-2"></i>Vulnerability Report</h1>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5>Target URL</h5>
+                                <code class="text-primary">https://music.youtube.com</code>
+                            </div>
+                            <div class="col-md-3">
+                                <h5>Scan Mode</h5>
+                                <span class="badge bg-primary">Safe</span>
+                            </div>
+                            <div class="col-md-3">
+                                <h5>Authentication</h5>
+                                <span class="badge bg-secondary">
+                                    Public
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-chart-pie me-2"></i>Severity Distribution</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="severityChart" height="300"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-chart-bar me-2"></i>Vulnerability Types</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="typesChart" height="300"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h3 class="text-primary">49</h3>
+                                        <p class="mb-0">Total Findings</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h3 class="severity-high">13</h3>
+                                        <p class="mb-0">High Severity</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h3 class="severity-medium">13</h3>
+                                        <p class="mb-0">Medium Severity</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h3 class="severity-low">23</h3>
+                                        <p class="mb-0">Low Severity</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bug me-2"></i>Detailed Findings</h3>
+                    </div>
+                    <div class="card-body">
+        
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">1. Weak X-XSS-Protection configuration</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com</code></p>
+                                <p><strong>Description:</strong> Enables browser XSS filtering (legacy) - Current value may be insufficient</p>
+            <p><strong>Payload:</strong> <code>0</code></p><p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-79</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">2. Missing Referrer-Policy</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com</code></p>
+                                <p><strong>Description:</strong> Controls referrer information disclosure</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">3. Information disclosure via Server</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com</code></p>
+                                <p><strong>Description:</strong> Server software version disclosure</p>
+            <p><strong>Payload:</strong> <code>ESF</code></p><p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-200</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">4. Sensitive file exposed: .svn/</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/.svn/</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory '.svn/' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">5. Sensitive file exposed: .hg/</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/.hg/</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory '.hg/' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">6. Sensitive file exposed: .bzr/</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/.bzr/</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory '.bzr/' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">7. Sensitive file exposed: .env</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/.env</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory '.env' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">8. Sensitive file exposed: .env.local</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/.env.local</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory '.env.local' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">9. Sensitive file exposed: .env.production</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/.env.production</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory '.env.production' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">10. Sensitive file exposed: .env.development</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/.env.development</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory '.env.development' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">11. Sensitive file exposed: settings.py</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/settings.py</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'settings.py' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">12. Sensitive file exposed: local_settings.py</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/local_settings.py</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'local_settings.py' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">13. Sensitive file exposed: backup/</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/backup/</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'backup/' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">14. Sensitive file exposed: backups/</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/backups/</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'backups/' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">15. Sensitive file exposed: backup.sql</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/backup.sql</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'backup.sql' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">16. Sensitive file exposed: dump.sql</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/dump.sql</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'dump.sql' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">17. Sensitive file exposed: database.sql</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/database.sql</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'database.sql' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">18. Sensitive file exposed: db_backup.sql</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/db_backup.sql</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'db_backup.sql' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">19. Sensitive file exposed: site_backup.zip</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/site_backup.zip</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'site_backup.zip' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">20. Sensitive file exposed: .bak</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/.bak</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory '.bak' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">21. Sensitive file exposed: backup.tar.gz</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/backup.tar.gz</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'backup.tar.gz' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">22. Sensitive file exposed: backup.zip</h5>
+                                <span class="badge bg-secondary severity-high">High</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/backup.zip</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'backup.zip' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 8.0</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">23. Sensitive file exposed: .DS_Store</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/.DS_Store</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory '.DS_Store' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">24. Sensitive file exposed: Thumbs.db</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/Thumbs.db</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'Thumbs.db' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">25. Sensitive file exposed: desktop.ini</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/desktop.ini</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'desktop.ini' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">26. Sensitive file exposed: crossdomain.xml</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/crossdomain.xml</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'crossdomain.xml' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">27. Sensitive file exposed: admin/</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/admin/</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'admin/' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">28. Sensitive file exposed: administrator/</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/administrator/</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'administrator/' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">29. Sensitive file exposed: phpmyadmin/</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/phpmyadmin/</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'phpmyadmin/' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">30. Sensitive file exposed: phpinfo.php</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/phpinfo.php</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'phpinfo.php' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">31. Sensitive file exposed: test.php</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/test.php</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'test.php' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">32. Sensitive file exposed: debug.php</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/debug.php</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'debug.php' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">33. Sensitive file exposed: info.php</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/info.php</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'info.php' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">34. Sensitive file exposed: phpinfo.php</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/phpinfo.php</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'phpinfo.php' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">35. Sensitive file exposed: status</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/status</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'status' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">36. Sensitive file exposed: server-status</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/server-status</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'server-status' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">37. Sensitive file exposed: server-info</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/server-info</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'server-info' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">38. Sensitive file exposed: error.log</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/error.log</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'error.log' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">39. Sensitive file exposed: access.log</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/access.log</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'access.log' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">40. Sensitive file exposed: debug.log</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/debug.log</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'debug.log' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">41. Sensitive file exposed: application.log</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/application.log</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'application.log' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">42. Sensitive file exposed: error_log</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/error_log</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'error_log' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">43. Sensitive file exposed: access_log</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/access_log</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'access_log' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">44. Sensitive file exposed: logs/</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/logs/</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'logs/' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">45. Sensitive file exposed: log/</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/log/</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'log/' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">46. Sensitive file exposed: README.md</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/README.md</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'README.md' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">47. Sensitive file exposed: INSTALL.txt</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/INSTALL.txt</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'INSTALL.txt' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">48. Sensitive file exposed: CHANGELOG.txt</h5>
+                                <span class="badge bg-secondary severity-medium">Medium</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/CHANGELOG.txt</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'CHANGELOG.txt' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 5.5</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">49. Sensitive file exposed: TODO.txt</h5>
+                                <span class="badge bg-secondary severity-low">Low</span>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>URL:</strong> <code>https://music.youtube.com/TODO.txt</code></p>
+                                <p><strong>Description:</strong> Sensitive file or directory 'TODO.txt' is publicly accessible</p>
+            <p><strong>CVSS Score:</strong> 3.1</p><p><strong>CWE:</strong> CWE-000</p>
+                            </div>
+                        </div>
+            
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Chart configuration
+        Chart.defaults.color = '#e0e0e0';
+        Chart.defaults.font.family = 'Inter, sans-serif';
+        
+        const cyberpunkColors = {
+            primary: '#00bfff',
+            high: '#ff4500',
+            medium: '#ffc107',
+            low: '#20c997',
+            info: '#6c757d'
+        };
+        
+        // Severity Chart
+        const severityCtx = document.getElementById('severityChart').getContext('2d');
+        new Chart(severityCtx, {
+            type: 'pie',
+            data: {
+                labels: ['High', 'Medium', 'Low', 'Info'],
+                datasets: [{
+                    data: [13, 13, 23, 0],
+                    backgroundColor: [
+                        cyberpunkColors.high,
+                        cyberpunkColors.medium,
+                        cyberpunkColors.low,
+                        cyberpunkColors.info
+                    ],
+                    borderColor: [
+                        cyberpunkColors.high,
+                        cyberpunkColors.medium,
+                        cyberpunkColors.low,
+                        cyberpunkColors.info
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#e0e0e0',
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Types Chart
+        const typesCtx = document.getElementById('typesChart').getContext('2d');
+        const vulnTypes = {"Weak X-XSS-Protection configuration": 1, "Missing Referrer-Policy": 1, "Information disclosure via Server": 1, "Sensitive file exposed: .svn/": 1, "Sensitive file exposed: .hg/": 1, "Sensitive file exposed: .bzr/": 1, "Sensitive file exposed: .env": 1, "Sensitive file exposed: .env.local": 1, "Sensitive file exposed: .env.production": 1, "Sensitive file exposed: .env.development": 1, "Sensitive file exposed: settings.py": 1, "Sensitive file exposed: local_settings.py": 1, "Sensitive file exposed: backup/": 1, "Sensitive file exposed: backups/": 1, "Sensitive file exposed: backup.sql": 1, "Sensitive file exposed: dump.sql": 1, "Sensitive file exposed: database.sql": 1, "Sensitive file exposed: db_backup.sql": 1, "Sensitive file exposed: site_backup.zip": 1, "Sensitive file exposed: .bak": 1, "Sensitive file exposed: backup.tar.gz": 1, "Sensitive file exposed: backup.zip": 1, "Sensitive file exposed: .DS_Store": 1, "Sensitive file exposed: Thumbs.db": 1, "Sensitive file exposed: desktop.ini": 1, "Sensitive file exposed: crossdomain.xml": 1, "Sensitive file exposed: admin/": 1, "Sensitive file exposed: administrator/": 1, "Sensitive file exposed: phpmyadmin/": 1, "Sensitive file exposed: phpinfo.php": 2, "Sensitive file exposed: test.php": 1, "Sensitive file exposed: debug.php": 1, "Sensitive file exposed: info.php": 1, "Sensitive file exposed: status": 1, "Sensitive file exposed: server-status": 1, "Sensitive file exposed: server-info": 1, "Sensitive file exposed: error.log": 1, "Sensitive file exposed: access.log": 1, "Sensitive file exposed: debug.log": 1, "Sensitive file exposed: application.log": 1, "Sensitive file exposed: error_log": 1, "Sensitive file exposed: access_log": 1, "Sensitive file exposed: logs/": 1, "Sensitive file exposed: log/": 1, "Sensitive file exposed: README.md": 1, "Sensitive file exposed: INSTALL.txt": 1, "Sensitive file exposed: CHANGELOG.txt": 1, "Sensitive file exposed: TODO.txt": 1};
+        const typeLabels = Object.keys(vulnTypes);
+        const typeData = Object.values(vulnTypes);
+        
+        new Chart(typesCtx, {
+            type: 'bar',
+            data: {
+                labels: typeLabels,
+                datasets: [{
+                    label: 'Count',
+                    data: typeData,
+                    backgroundColor: typeLabels.map((_, i) => `hsl(${(i * 137.5) % 360}, 70%, 60%)`),
+                    borderColor: typeLabels.map((_, i) => `hsl(${(i * 137.5) % 360}, 70%, 60%)`),
+                    borderWidth: 2,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#ccc',
+                            stepSize: 1
+                        },
+                        grid: {
+                            color: 'rgba(0, 191, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#ccc'
+                        },
+                        grid: {
+                            color: 'rgba(0, 191, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+        

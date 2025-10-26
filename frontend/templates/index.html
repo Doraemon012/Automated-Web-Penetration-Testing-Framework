@@ -2,105 +2,153 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-8 mx-auto">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="fas fa-globe"></i> Web Vulnerability Scanner</h4>
-            </div>
-            <div class="card-body">
-                <!-- Scan Form -->
-                <div id="scan-form">
-                    <div class="mb-3">
-                        <label for="target-url" class="form-label">Target URL</label>
-                        <input type="url" class="form-control" id="target-url" 
-                               placeholder="https://example.com" required>
-                        <div class="form-text">Enter the target website URL to scan for vulnerabilities</div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-lg" id="start-scan">
-                        <i class="fas fa-search"></i> Start Scan
-                    </button>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-xl-10 col-lg-11">
+            
+            <!-- Scan Form Card -->
+            <div class="card glass-card mb-4 animate-fade-in">
+                <div class="card-header d-flex align-items-center">
+                    <i class="fas fa-crosshairs fa-fw me-2 text-primary-glow"></i>
+                    <h4 class="mb-0">Security Scan</h4>
                 </div>
+                <div class="card-body p-4">
+                    <div id="scan-form">
+                        <!-- Target URL Input -->
+                        <div class="mb-4">
+                            <label for="target-url" class="form-label text-white">
+                                <i class="fas fa-globe fa-fw me-1"></i>Target URL
+                            </label>
+                            <input type="url" class="form-control form-control-lg" id="target-url" 
+                                   placeholder="https://example.com" required>
+                            <div class="form-text text-white-50">Enter the target website URL to scan for vulnerabilities</div>
+                        </div>
 
-                <!-- Progress Section -->
-                <div id="progress-container" class="progress-container mt-4">
-                    <h5>Scanning Progress</h5>
-                    <div class="progress mb-3">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                             id="progress-bar" role="progressbar" style="width: 0%">
-                            0%
+                        <!-- Scan Mode Selection -->
+                        <div class="mb-4">
+                            <label class="form-label text-white mb-3">
+                                <i class="fas fa-cogs fa-fw me-1"></i>Scan Mode
+                            </label>
+                            <div class="scan-mode-chips">
+                                <div class="scan-mode-chip" data-mode="ultra-safe" data-tooltip="Minimal scanning for large public sites (Google, Facebook, etc.) - skips headers and XSS">
+                                    <i class="fa-regular fa-shield-check"></i>
+                                    <span>Ultra-Safe</span>
+                                </div>
+                                <div class="scan-mode-chip" data-mode="safe" data-tooltip="Fast scanning with reduced checks and shallow crawling">
+                                    <i class="fas fa-shield-alt fa-fw"></i>
+                                    <span>Safe</span>
+                                </div>
+                                <div class="scan-mode-chip active" data-mode="standard" data-tooltip="Balanced coverage with standard vulnerability checks">
+                                    <i class="fas fa-balance-scale fa-fw"></i>
+                                    <span>Standard</span>
+                                </div>
+                                <div class="scan-mode-chip" data-mode="aggressive" data-tooltip="Thorough scanning with all checks including open redirects and parameter fuzzing">
+                                    <i class="fas fa-fire fa-fw"></i>
+                                    <span>Aggressive</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="scan-mode" value="standard">
+                        </div>
+
+                        <!-- Authentication Section -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-shield-alt fa-fw me-2 text-primary"></i>
+                                <h6 class="mb-0 text-white">Authentication (Optional)</h6>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="auth-type" class="form-label text-white-50">Auth Type</label>
+                                    <select class="form-select" id="auth-type">
+                                        <option value="">None</option>
+                                        <option value="form">Form-based</option>
+                                        <option value="token">Token-based</option>
+                                        <option value="basic">HTTP Basic</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="username" class="form-label text-white-50">Username</label>
+                                    <input type="text" class="form-control" id="username" placeholder="admin">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="password" class="form-label text-white-50">Password</label>
+                                    <input type="password" class="form-control" id="password" placeholder="password">
+                                </div>
+                            </div>
+                            
+                            <!-- Additional auth fields -->
+                            <div id="auth-extra-fields" class="mt-3" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="login-url" class="form-label text-white-50">Login URL</label>
+                                        <input type="text" class="form-control" id="login-url" placeholder="/login">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="token" class="form-label text-white-50">Token</label>
+                                        <input type="text" class="form-control" id="token" placeholder="Bearer token">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Start Scan Button -->
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary btn-lg" id="start-scan">
+                                <span class="spinner-border spinner-border-sm" role="status" style="display: none;"></span>
+                                <span class="btn-text"><i class="fas fa-search fa-fw"></i> Start Scan</span>
+                            </button>
                         </div>
                     </div>
-                    <p id="current-task" class="text-muted">Initializing...</p>
-                    <button type="button" class="btn btn-secondary" id="stop-scan" disabled>
-                        <i class="fas fa-stop"></i> Stop Scan
-                    </button>
                 </div>
+            </div>
 
-                <!-- Results Section -->
-                <div id="results-container" class="results-container mt-4">
-                    <h5>Scan Results</h5>
+            <!-- Progress Section -->
+            <div id="progress-container" class="mb-4" style="display: none;">
+                <div class="card glass-card">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Scan in Progress...</h5>
+                        <p id="current-task" class="text-white-50 mb-2">Initializing...</p>
+                        <div class="progress" style="height: 25px;">
+                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary-gradient" role="progressbar" style="width: 0%;">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div id="error-container" class="alert alert-danger" style="display: none;">
+                <strong><i class="fas fa-exclamation-triangle fa-fw"></i> Error:</strong> <span id="error-message"></span>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results-container" class="mt-4" style="display: none;">
+                <div class="animate-fade-in-slow">
+                    <h2 class="mb-4 text-white">Scan Report: <code class="text-primary-glow" id="report-target-url"></code></h2>
                     
                     <!-- Summary Cards -->
                     <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h3 id="total-vulns" class="text-primary">0</h3>
-                                    <p class="mb-0">Total Vulnerabilities</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h3 id="high-vulns" class="severity-high">0</h3>
-                                    <p class="mb-0">High</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h3 id="medium-vulns" class="severity-medium">0</h3>
-                                    <p class="mb-0">Medium</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h3 id="low-vulns" class="severity-low">0</h3>
-                                    <p class="mb-0">Low</p>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4"><div class="card summary-card h-100"><div class="card-body"><h3 id="total-vulns" class="text-primary-glow">0</h3><p class="mb-0">Total Findings</p></div></div></div>
+                        <div class="col-lg-3 col-md-6 mb-4"><div class="card summary-card h-100"><div class="card-body"><h3 id="high-vulns" class="severity-high">0</h3><p class="mb-0">High Severity</p></div></div></div>
+                        <div class="col-lg-3 col-md-6 mb-4"><div class="card summary-card h-100"><div class="card-body"><h3 id="medium-vulns" class="severity-medium">0</h3><p class="mb-0">Medium Severity</p></div></div></div>
+                        <div class="col-lg-3 col-md-6 mb-4"><div class="card summary-card h-100"><div class="card-body"><h3 id="low-vulns" class="severity-low">0</h3><p class="mb-0">Low Severity</p></div></div></div>
                     </div>
 
-                    <!-- Download Buttons -->
-                    <div class="mb-4">
-                        <button type="button" class="btn btn-success me-2" id="download-json">
-                            <i class="fas fa-download"></i> Download JSON Report
-                        </button>
-                        <button type="button" class="btn btn-info" id="download-md">
-                            <i class="fas fa-download"></i> Download Markdown Report
-                        </button>
-                    </div>
-
-                    <!-- Detailed Results -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h6 class="mb-0">Vulnerability Details</h6>
+                    <!-- Details Card -->
+                    <div class="card glass-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-bug fa-fw me-2 text-primary-glow"></i>Vulnerability Details</h5>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-success" id="download-json"><i class="fas fa-file-code fa-fw"></i> JSON</button>
+                                <button type="button" class="btn btn-sm btn-outline-light" id="download-md"><i class="fab fa-markdown fa-fw"></i> Markdown</button>
+                            </div>
                         </div>
                         <div class="card-body">
-                            <div id="vulnerability-list"></div>
+                            <div class="accordion" id="vulnerability-accordion">
+                                <!-- Vulnerabilities will be dynamically injected here -->
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Error Section -->
-                <div id="error-container" class="alert alert-danger" style="display: none;">
-                    <strong>Error:</strong> <span id="error-message"></span>
                 </div>
             </div>
         </div>
@@ -112,37 +160,132 @@
 <script>
 $(document).ready(function() {
     let statusInterval;
-    
+
+    const vulnerabilityDB = {
+        'SQL Injection': {
+            title: 'SQL Injection (SQLi)',
+            what: `SQL Injection is a code injection technique that might destroy your database. It's one of a web application's most common and dangerous security vulnerabilities.`,
+            how: `An attacker can get access to your database by inserting their own SQL commands into your application's queries. This usually happens through form inputs (like a search bar or login form) when the application doesn't properly sanitize the user's input. Attackers can then steal, modify, or delete data, and in some cases, gain full control of the server.`,
+            prevention: `<ul><li><strong>Use Prepared Statements (with Parameterized Queries):</strong> This is the most effective defense. It separates the SQL query's logic from its data, making it impossible for an attacker's input to be executed as code.</li><li><strong>Validate and Sanitize All User Input:</strong> Treat all input from users as untrusted. Implement strict validation rules for data types, formats, and lengths on the server side.</li><li><strong>Enforce Least Privilege:</strong> The database account used by your application should only have the absolute minimum permissions it needs to function.</li></ul>`
+        },
+        'Cross-Site Scripting (XSS)': {
+            title: 'Cross-Site Scripting (XSS)',
+            what: `Cross-Site Scripting is a vulnerability that allows an attacker to inject malicious scripts (usually JavaScript) into web pages viewed by other users.`,
+            how: `The attacker injects a malicious script into user-generated content, like a comment section. When another user visits that page, their browser executes the script, believing it's a trusted part of the website.`,
+            prevention: `<ul><li><strong>Context-Aware Output Encoding:</strong> Before rendering user-provided content in HTML, encode it so the browser treats it as plain text, not executable code.</li><li><strong>Implement a Content Security Policy (CSP):</strong> A CSP is a security header that tells the browser which sources of content are allowed.</li><li><strong>Set the HttpOnly Flag on Cookies:</strong> This prevents client-side scripts from accessing sensitive session cookies.</li></ul>`
+        },
+        'Reflected XSS': {
+            title: 'Reflected Cross-Site Scripting (XSS)',
+            what: `Reflected XSS happens when malicious input from a URL parameter is immediately included in the page output without sanitization.`,
+            how: `An attacker tricks a user into clicking a malicious link that reflects a script back into their browser, stealing data or hijacking sessions.`,
+            prevention: `<ul><li><strong>Context-Aware Output Encoding:</strong> Encode user input before rendering in HTML.</li><li><strong>Input Validation:</strong> Reject suspicious or malformed data.</li><li><strong>Content Security Policy (CSP):</strong> Restrict script execution to trusted sources.</li></ul>`
+        },
+        'Missing X-Frame-Options': {
+            title: 'Missing X-Frame-Options Header',
+            what: `The X-Frame-Options header prevents clickjacking attacks.`,
+            how: `Without it, attackers can load your site inside an invisible iframe and trick users into clicking on hidden buttons.`,
+            prevention: `<ul><li><code>X-Frame-Options: DENY</code></li><li><code>X-Frame-Options: SAMEORIGIN</code></li></ul>`
+        },
+        'Possible SQL Injection': {
+        title: 'Possible SQL Injection (SQLi)',
+        what: "SQL Injection is a code injection technique that might destroy your database. It's one of a web application's most common and dangerous security vulnerabilities.",
+        how: "An attacker can get access to your database by inserting their own SQL commands into your application's queries. This usually happens through form inputs (like a search bar or login form) when the application doesn't properly sanitize the user's input. Attackers can then steal, modify, or delete data, and in some cases, gain full control of the server.",
+        prevention: "<ul><li><strong>Use Prepared Statements (with Parameterized Queries):</strong> This is the most effective defense. It separates the SQL query's logic from its data, making it impossible for an attacker's input to be executed as code.</li><li><strong>Validate and Sanitize All User Input:</strong> Treat all input from users as untrusted. Implement strict validation rules for data types, formats, and lengths on the server side.</li><li><strong>Enforce Least Privilege:</strong> The database account used by your application should only have the absolute minimum permissions it needs to function.</li></ul>"
+        },
+        'Missing Content-Security-Policy': {
+        title: 'Missing Content-Security-Policy (CSP) Header',
+        what: "Content Security Policy (CSP) is a powerful security layer that helps detect and mitigate certain types of attacks, including Cross-Site Scripting (XSS) and data injection attacks.",
+        how: "Without a CSP, if an attacker finds an XSS vulnerability, their malicious script can make requests to any domain on the internet to load more scripts or send stolen data (like session cookies). A CSP acts as a whitelist for your website's content.",
+        prevention: "<strong>Implement a `Content-Security-Policy` HTTP header.</strong> A basic policy might be `Content-Security-Policy: default-src 'self'`. This tells the browser to only load content (scripts, images, styles) from your own domain. Creating a CSP requires careful planning to ensure you don't block legitimate resources."
+    },
+    'Missing Strict-Transport-Security': {
+        title: 'Missing HTTP Strict-Transport-Security (HSTS) Header',
+        what: "HTTP Strict Transport Security (HSTS) is a security header that forces a user's browser to only connect to your website using secure HTTPS connections, never insecure HTTP.",
+        how: "Without HSTS, a user might first connect to your site via HTTP. An attacker on the same network (e.g., public Wi-Fi) can intercept this initial request and perform a man-in-the-middle attack, redirecting the user to a fake site or capturing data before the server can redirect to HTTPS. HSTS tells the browser to *never* make that initial insecure connection.",
+        prevention: "<strong>Add the `Strict-Transport-Security` header to your HTTPS responses.</strong> A recommended value is `Strict-Transport-Security: max-age=31536000; includeSubDomains`. This instructs the browser to enforce HTTPS for one year for both the main domain and all its subdomains."
+    },
+    'HTTPS not enforced': {
+        title: 'HTTPS Not Enforced',
+        what: "This vulnerability means the website is accessible over unencrypted HTTP, or it does not automatically redirect all HTTP traffic to a secure HTTPS connection.",
+        how: "Any data sent over HTTP is in plain text. An attacker on the same network can easily intercept, read, or modify the traffic between the user and the server. This includes sensitive information like login credentials, session cookies, and personal data.",
+        prevention: "<ul><li><strong>Configure your web server (e.g., Nginx, Apache) to issue a permanent (301) redirect for all HTTP requests to their HTTPS equivalent.</strong></li><li><strong>Ensure all internal resources (images, scripts, links) use HTTPS URLs.</strong></li><li><strong>Enable the `Secure` flag on all session cookies.</strong></li></ul>"
+    },
+    'Open Redirect': {
+        title: 'Open Redirect',
+        what: "An Open Redirect is a vulnerability where an application uses a user-supplied parameter to redirect the user to another URL without proper validation.",
+        how: "An attacker can craft a link to your trusted website that contains a redirect parameter pointing to a malicious site. For example: `https://your-trusted-site.com/redirect?url=https://malicious-phishing-site.com`. A user sees the trusted domain, clicks the link, and is then unknowingly redirected to the attacker's phishing page.",
+        prevention: "<strong>Avoid using redirects that rely on user-supplied destinations.</strong> If you must, maintain a server-side whitelist of approved and safe URLs. Reject any redirect request that does not match an entry in the whitelist."
+    }
+        // ✅ Add other entries similarly (always use backticks for multiline text)
+    };
+
+    // Handle scan mode chip selection
+    $('.scan-mode-chip').click(function() {
+        $('.scan-mode-chip').removeClass('active');
+        $(this).addClass('active');
+        $('#scan-mode').val($(this).data('mode'));
+    });
+
+    // Handle authentication type changes
+    $('#auth-type').change(function() {
+        const authType = $(this).val();
+        if (authType === 'form') {
+            $('#auth-extra-fields').show();
+            $('#login-url').closest('.col-md-6').show();
+            $('#token').closest('.col-md-6').hide();
+            $('#username, #password').closest('.col-md-4').show();
+        } else if (authType === 'token') {
+            $('#auth-extra-fields').show();
+            $('#login-url').closest('.col-md-6').hide();
+            $('#token').closest('.col-md-6').show();
+            $('#username, #password').closest('.col-md-4').hide();
+        } else if (authType === 'basic') {
+            $('#auth-extra-fields').hide();
+            $('#username, #password').closest('.col-md-4').show();
+        } else {
+            $('#auth-extra-fields').hide();
+            $('#username, #password').closest('.col-md-4').hide();
+        }
+    });
+
     $('#start-scan').click(function() {
         const url = $('#target-url').val();
         if (!url) {
-            alert('Please enter a target URL');
+            alert('Please enter a target URL.');
             return;
         }
-        
         startScan(url);
     });
     
     function startScan(url) {
-        // Hide previous results and errors
         $('#results-container').hide();
         $('#error-container').hide();
-        
-        // Show progress container
         $('#progress-container').show();
+        $('#start-scan .spinner-border').show();
+        $('#start-scan .btn-text').text('Scanning...');
         $('#start-scan').prop('disabled', true);
+        
+        // Collect scan configuration
+        const scanConfig = {
+            url: url,
+            mode: $('#scan-mode').val(),
+            auth_type: $('#auth-type').val(),
+            username: $('#username').val(),
+            password: $('#password').val(),
+            login_url: $('#login-url').val(),
+            token: $('#token').val()
+        };
         
         $.ajax({
             url: '/api/scan',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({url: url}),
+            data: JSON.stringify(scanConfig),
             success: function(response) {
-                // Start polling for status updates
-                statusInterval = setInterval(checkStatus, 1000);
+                statusInterval = setInterval(checkStatus, 1500);
             },
             error: function(xhr) {
-                const error = xhr.responseJSON ? xhr.responseJSON.error : 'Unknown error';
+                const error = xhr.responseJSON ? xhr.responseJSON.error : 'Failed to start scan';
                 showError(error);
                 resetUI();
             }
@@ -158,15 +301,18 @@ $(document).ready(function() {
                 
                 if (!status.running) {
                     clearInterval(statusInterval);
-                    
                     if (status.error) {
                         showError(status.error);
-                        resetUI();
                     } else if (status.results) {
                         showResults(status.results);
-                        resetUI();
                     }
+                    resetUI();
                 }
+            },
+            error: function() {
+                clearInterval(statusInterval);
+                showError('Lost connection to the server.');
+                resetUI();
             }
         });
     }
@@ -181,45 +327,88 @@ $(document).ready(function() {
         $('#progress-container').hide();
         $('#results-container').show();
         
-        // Update summary
+        $('#report-target-url').text(results.target_url);
         $('#total-vulns').text(results.total_vulnerabilities);
         $('#high-vulns').text(results.vulnerabilities_by_severity.High || 0);
         $('#medium-vulns').text(results.vulnerabilities_by_severity.Medium || 0);
         $('#low-vulns').text(results.vulnerabilities_by_severity.Low || 0);
         
-        // Set download buttons
-        $('#download-json').click(() => downloadReport(results.json_report));
-        $('#download-md').click(() => downloadReport(results.md_report));
+        $('#download-json').off('click').on('click', () => downloadReport(results.json_report));
+        $('#download-md').off('click').on('click', () => downloadReport(results.md_report));
         
-        // Display vulnerability details
-        displayVulnerabilities(results.findings);
+        displayVulnerabilityGroups(results.findings);
     }
     
-    function displayVulnerabilities(findings) {
-        const container = $('#vulnerability-list');
+    function displayVulnerabilityGroups(findings) {
+        const container = $('#vulnerability-accordion');
         container.empty();
         
         if (findings.length === 0) {
-            container.html('<p class="text-success">🎉 No vulnerabilities found!</p>');
+            container.html('<div class="text-center p-4"><i class="fas fa-check-circle fa-3x text-success"></i><h4 class="mt-3">Congratulations!</h4><p class="text-white-50">No vulnerabilities were found during this scan.</p></div>');
             return;
         }
-        
-        findings.forEach((finding, index) => {
-            const severityClass = `severity-${finding.severity.toLowerCase()}`;
-            const card = $(`
-                <div class="card mb-2">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">${finding.vulnerability}</h6>
-                        <span class="badge bg-secondary ${severityClass}">${finding.severity}</span>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>URL:</strong> <code>${finding.url}</code></p>
-                        ${finding.payload ? `<p><strong>Payload:</strong> <code>${finding.payload}</code></p>` : ''}
-                        <p><strong>Description:</strong> ${finding.description}</p>
+
+        const groupedFindings = findings.reduce((acc, finding) => {
+            const key = finding.vulnerability;
+            if (!acc[key]) {
+                acc[key] = [];
+            }
+            acc[key].push(finding);
+            return acc;
+        }, {});
+
+        Object.entries(groupedFindings).forEach(([groupName, groupItems], index) => {
+            const firstItem = groupItems[0];
+            const severityClass = firstItem.severity.toLowerCase();
+            const groupId = `group-${index}`;
+            const vulnerabilityInfo = vulnerabilityDB[groupName] || { title: groupName, what: 'No description available.', how: '', prevention: '' };
+
+            const groupHtml = `
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading-${groupId}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${groupId}">
+                        <span class="badge bg-${severityClass} me-3">${firstItem.severity}</span>
+                        ${groupName}
+                        <span class="badge rounded-pill bg-secondary ms-auto me-2">${groupItems.length} found</span>
+                    </button>
+                </h2>
+                <div id="collapse-${groupId}" class="accordion-collapse collapse" data-bs-parent="#vulnerability-accordion">
+                    <div class="accordion-body">
+                        <div class="vuln-details">
+                            <h5><i class="fas fa-info-circle fa-fw text-primary"></i> What is ${vulnerabilityInfo.title}?</h5>
+                            <p class="text-white-50">${vulnerabilityInfo.what}</p>
+                            
+                            <h5><i class="fas fa-hammer fa-fw text-danger"></i> How It Works</h5>
+                            <p class="text-white-50">${vulnerabilityInfo.how}</p>
+
+                            <h5><i class="fas fa-shield-alt fa-fw text-success"></i> How to Prevent It</h5>
+                            <div class="text-white-50">${vulnerabilityInfo.prevention}</div>
+                        </div>
+                        <hr class="my-4">
+                        <h6 class="mb-3">Affected Locations:</h6>
+                        <div class="list-group list-group-flush">
+                            ${groupItems.map(item => `
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1"><strong><i class="fas fa-link fa-fw"></i> URL:</strong> <code>${item.url}</code></p>
+                                            ${item.payload ? `<p class="mb-1"><strong><i class="fas fa-crosshairs fa-fw"></i> Payload:</strong> <code>${item.payload}</code></p>` : ''}
+                                            ${item.evidence ? `<p class="mb-1"><strong><i class="fas fa-microscope fa-fw"></i> Evidence:</strong> <code>${item.evidence}</code></p>` : ''}
+                                        </div>
+                                        <div class="vulnerability-scores ms-3">
+                                            ${item.cvss_score ? `<span class="badge bg-danger me-1" title="CVSS Score">CVSS ${item.cvss_score}</span>` : ''}
+                                            ${item.cwe ? `<span class="badge bg-secondary me-1" title="Common Weakness Enumeration">${item.cwe}</span>` : ''}
+                                            ${item.confidence ? `<span class="badge bg-info" title="Detection Confidence">${item.confidence}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <small class="text-white-50">${item.description}</small>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
-            `);
-            container.append(card);
+            </div>`;
+            container.append(groupHtml);
         });
     }
     
@@ -228,14 +417,15 @@ $(document).ready(function() {
     }
     
     function showError(message) {
-        $('#error-message').text(message);
+        $('#error-message').html(message);
         $('#error-container').show();
+        $('#progress-container').hide();
     }
     
     function resetUI() {
+        $('#start-scan .spinner-border').hide();
+        $('#start-scan .btn-text').html('<i class="fas fa-search fa-fw"></i> Start Scan');
         $('#start-scan').prop('disabled', false);
-        $('#progress-container').hide();
-        $('#progress-bar').css('width', '0%').text('0%');
     }
 });
 </script>

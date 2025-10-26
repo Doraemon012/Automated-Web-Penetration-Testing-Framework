@@ -1,0 +1,25 @@
+{
+    "target_url": "https://www.google.com",
+    "total_vulnerabilities": 1,
+    "vulnerabilities_by_severity": {
+        "Medium": 1
+    },
+    "scan_time": "2025-10-14T14:59:39.885564",
+    "mode": "ultra-safe",
+    "auth_used": false,
+    "findings": [
+        {
+            "vulnerability": "Potential missing CSRF token in form",
+            "url": "https://www.google.com",
+            "payload": null,
+            "severity": "Medium",
+            "description": "Form appears to lack a CSRF token field",
+            "evidence": "Form index 0 has no recognizable CSRF token",
+            "recommendation": "Include server-generated CSRF token in forms and validate on submit",
+            "cwe": "CWE-000",
+            "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+            "cvss_score": 5.5,
+            "confidence": "Tentative"
+        }
+    ]
+}

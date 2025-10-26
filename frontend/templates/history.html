@@ -1,49 +1,93 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h4 class="mb-0"><i class="fas fa-history"></i> Scan History</h4>
-            </div>
-            <div class="card-body">
-                {% if reports %}
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Date/Time</th>
-                                <th>Vulnerabilities Found</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for report in reports %}
-                            <tr>
-                                <td>{{ report.timestamp }}</td>
-                                <td>
-                                    <span class="badge bg-primary">{{ report.vulnerability_count }}</span>
-                                </td>
-                                <td>
-                                    <a href="/api/download/{{ report.filename }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-download"></i> Download JSON
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="text-center py-4">
-                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">No scan history available</p>
-                    <a href="/" class="btn btn-primary">Run Your First Scan</a>
-                </div>
-                {% endif %}
-            </div>
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0 text-white"><i class="fas fa-history text-primary me-2"></i> Scan History</h4>
+    </div>
+    <div class="card-body">
+        {% if reports %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Scan Date</th>
+                        <th>Target URL</th>
+                        <th>Mode</th>
+                        <th>Auth</th>
+                        <th>Findings</th>
+                        <th>Severity Breakdown</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td>
+                            <small class="text-white-50">{{ report.timestamp }}</small>
+                        </td>
+                        <td>
+                            <code class="text-primary">{{ report.target_url }}</code>
+                        </td>
+                        <td>
+                            {% if report.scan_mode == 'safe' %}
+                                <span class="badge bg-success"><i class="fas fa-shield-alt"></i> Safe</span>
+                            {% elif report.scan_mode == 'standard' %}
+                                <span class="badge bg-primary"><i class="fas fa-balance-scale"></i> Standard</span>
+                            {% elif report.scan_mode == 'aggressive' %}
+                                <span class="badge bg-danger"><i class="fas fa-fire"></i> Aggressive</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ report.scan_mode }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if report.auth_used %}
+                                <span class="badge bg-warning"><i class="fas fa-key"></i> Authenticated</span>
+                            {% else %}
+                                <span class="badge bg-secondary"><i class="fas fa-unlock"></i> Public</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary rounded-pill fs-6">{{ report.vulnerability_count }}</span>
+                        </td>
+                        <td>
+                            {% if report.vulnerabilities_by_severity %}
+                                {% for severity, count in report.vulnerabilities_by_severity.items() %}
+                                    {% if severity == 'High' %}
+                                        <span class="badge bg-danger me-1">{{ count }}H</span>
+                                    {% elif severity == 'Medium' %}
+                                        <span class="badge bg-warning me-1">{{ count }}M</span>
+                                    {% elif severity == 'Low' %}
+                                        <span class="badge bg-success me-1">{{ count }}L</span>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/api/download/{{ report.json_file }}" class="btn btn-sm btn-outline-success" title="Download JSON Report">
+                                    <i class="fas fa-file-code"></i>
+                                </a>
+                                <a href="/api/download/{{ report.md_file }}" class="btn btn-sm btn-outline-info" title="Download Markdown Report">
+                                    <i class="fab fa-markdown"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+            <h5 class="text-muted">No Scan History Found</h5>
+            <p>Run a new scan to see your report history here.</p>
+            <a href="/" class="btn btn-primary mt-2"><i class="fas fa-search"></i> Run Your First Scan</a>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
