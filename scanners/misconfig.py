@@ -94,9 +94,9 @@ def check_sensitive_files(base_url, session=None):
         
         try:
             if session:
-                response = session.get(url, timeout=5)
+                response = session.get(url, timeout=2)
             else:
-                response = requests.get(url, timeout=5)
+                response = requests.get(url, timeout=2)
             
             if response.status_code == 200 and len(response.text) > 0:
                 # Skip legitimate public files
@@ -128,7 +128,7 @@ def check_csrf_tokens(base_url, session=None):
     """Heuristic CSRF protection check: Look for forms lacking CSRF tokens and SameSite cookies."""
     issues = []
     try:
-        response = (session.get if session else requests.get)(base_url, timeout=7)
+        response = (session.get if session else requests.get)(base_url, timeout=2)
         html = response.text
         forms = re.findall(r"<form[^>]*>(.*?)</form>", html, flags=re.IGNORECASE | re.DOTALL)
         for idx, form_html in enumerate(forms):
@@ -248,9 +248,9 @@ def check_directory_listing(base_url, session=None):
         
         try:
             if session:
-                response = session.get(url, timeout=5)
+                response = session.get(url, timeout=2)
             else:
-                response = requests.get(url, timeout=5)
+                response = requests.get(url, timeout=2)
             
             if response.status_code == 200:
                 if is_directory_listing(response.text):

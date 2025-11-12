@@ -263,15 +263,17 @@
         .vulnerability-scores {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            min-width: 120px;
+            gap: 6px;
+            min-width: 140px;
         }
         
         .vulnerability-scores .badge {
             font-size: 11px;
-            padding: 4px 8px;
+            padding: 6px 10px;
             border-radius: 12px;
             font-weight: 600;
+            display: block;
+            text-align: center;
         }
         
         .vulnerability-scores .badge.bg-danger {
@@ -280,6 +282,162 @@
         
         .vulnerability-scores .badge.bg-info {
             background-color: var(--primary-accent) !important;
+        }
+
+        /* Accordion fixes */
+        .accordion-item {
+            margin-bottom: 15px;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: var(--primary-accent) !important;
+            color: var(--background-dark) !important;
+            box-shadow: 0 0 10px rgba(0, 191, 255, 0.3);
+        }
+
+        .accordion-button:focus {
+            box-shadow: 0 0 0 .25rem rgba(0, 191, 255, 0.25) !important;
+        }
+
+        /* List group improvements */
+        .list-group-item {
+            transition: all 0.3s ease;
+        }
+
+        .list-group-item:hover {
+            background: rgba(0, 191, 255, 0.1) !important;
+            border-color: var(--primary-accent) !important;
+            transform: translateX(3px);
+        }
+
+        /* Vulnerability Container for Split Panel */
+        .vulnerability-container {
+            display: flex;
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vulnerability-list-panel {
+            width: 100%;
+            overflow-y: auto;
+            padding: 20px;
+            transition: width 0.5s ease;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .vulnerability-list-panel #vulnerability-accordion {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .vulnerability-detail-panel {
+            width: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: width 0.5s ease, opacity 0.5s ease;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 2px solid var(--border-color);
+        }
+
+        .vulnerability-detail-panel.active {
+            width: 50%;
+            opacity: 1;
+        }
+
+        .vulnerability-detail-panel.active.full-mode {
+            width: calc(100% + 10px) !important;
+            margin-right: -10px;
+        }
+
+        .vulnerability-list-panel.split-mode {
+            width: 50%;
+            justify-content: flex-start;
+        }
+
+        .vulnerability-list-panel.hidden {
+            width: 0 !important;
+            overflow: hidden;
+            transition: width 0.5s ease, opacity 0.5s ease;
+        }
+        
+        .vulnerability-list-panel.split-mode #vulnerability-accordion {
+            max-width: 100%;
+        }
+
+        /* Detail Panel Styles */
+        .detail-content {
+            padding: 20px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        /* Vulnerability List Items */
+        .vuln-list-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .vuln-list-item:hover {
+            background: rgba(0, 191, 255, 0.1);
+            border-color: var(--primary-accent);
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0, 191, 255, 0.2);
+        }
+
+        .vuln-list-item.active {
+            background: rgba(0, 191, 255, 0.15);
+            border-left: 4px solid var(--primary-accent);
+        }
+
+        /* Scrollbar styling */
+        .vulnerability-list-panel::-webkit-scrollbar,
+        .detail-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .vulnerability-list-panel::-webkit-scrollbar-track,
+        .detail-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .vulnerability-list-panel::-webkit-scrollbar-thumb,
+        .detail-content::-webkit-scrollbar-thumb {
+            background: var(--primary-accent);
+            border-radius: 4px;
+        }
+
+        /* Payload highlighting */
+        .payload-display {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-family: 'Roboto Mono', monospace;
+            word-break: break-all;
+        }
+
+        /* Tooltip styling */
+        [title] {
+            cursor: help;
+        }
+
+        /* Better code styling */
+        code {
+            background: rgba(255, 255, 255, 0.1);
+            color: #00d4ff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9em;
         }
         
         /* Form Controls Dark Theme */
@@ -441,6 +599,41 @@
             margin-right: 0;
         }
 
+        /* Documentation Page Styles */
+        .step-number {
+            box-shadow: 0 4px 15px rgba(0, 191, 255, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .step-number:hover {
+            transform: scale(1.1);
+        }
+
+        .card h5 {
+            margin-top: 0;
+        }
+
+        /* Gradient backgrounds for feature cards */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .bg-gradient-success {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .bg-gradient-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .bg-gradient-warning {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .bg-gradient-danger {
+            background: linear-gradient(135deg, #f83600 0%, #f9d423 100%);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -463,6 +656,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="navbar-nav ms-auto">
                     <a class="nav-link" href="/"><i class="fas fa-search fa-fw me-1"></i> New Scan</a>
+                    <a class="nav-link" href="/docs"><i class="fas fa-book fa-fw me-1"></i> Documentation</a>
                     <a class="nav-link" href="/history"><i class="fas fa-history fa-fw me-1"></i> History</a>
                 </div>
             </div>

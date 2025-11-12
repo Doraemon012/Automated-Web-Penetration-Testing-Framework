@@ -196,6 +196,7 @@ from scanners.xss import test_xss
 from scanners.misconfig import check_misconfig, check_open_redirect, fuzz_url_params
 from reports.reporter import Reporter
 from reports.risk import enrich_findings
+from reports.cvss_compute import enhance_finding_with_cvss, deduplicate_findings
 import json
 import time
 
@@ -281,7 +282,7 @@ def run_complete_scan(target_url, auth_config=None, use_js=False, mode="standard
     # Advanced SQL injection detection (error/time/boolean-based)
     if mode in ("standard", "aggressive") or (mode == "ultra-safe" and not is_large_site):
         print("  💉 Testing for SQL injection vulnerabilities...")
-        reporter.add_findings(test_sqli(target, crawler.discovered["forms"], session))
+        reporter.add_findings(test_sqli(target, crawler.discovered["forms"], session, mode=mode))
     
     # Context-aware XSS scanning
     if mode != "ultra-safe" or not is_large_site:
@@ -596,7 +597,11 @@ def main():
     try:
         findings = run_complete_scan(target, auth_config, args.js, mode=args.mode)
         
-        # Enrich with risk scoring
+        # Enhanced CVSS scoring pipeline
+        findings = [enhance_finding_with_cvss(f) for f in findings]
+        findings = deduplicate_findings(findings)
+        
+        # Apply CWE mapping from existing risk.py
         findings = enrich_findings(findings)
 
         # Save reports

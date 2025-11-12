@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-xl-10 col-lg-11">
+            
+            <!-- Hero Section -->
+            <div class="card glass-card mb-4 animate-fade-in">
+                <div class="card-header text-center">
+                    <h1 class="mb-0"><i class="fas fa-book-reader fa-fw text-primary me-3"></i>Vanguard Security Scanner Documentation</h1>
+                    <p class="text-white-50 mt-2 mb-0">Enterprise-grade web vulnerability scanning with advanced CVSS scoring</p>
+                </div>
+            </div>
+
+            <!-- Quick Overview -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card glass-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-rocket fa-3x text-primary mb-3"></i>
+                            <h4>How It Works</h4>
+                            <p class="text-white-50">Vanguard performs comprehensive vulnerability detection using multiple scanning techniques and advanced CVSS scoring</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card glass-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-layer-group fa-3x text-warning mb-3"></i>
+                            <h4>Multiple Scans</h4>
+                            <p class="text-white-50">SQLi, XSS, Security Headers, Misconfigurations, and more with verification to reduce false positives</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card glass-card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                            <h4>Smart Scanning</h4>
+                            <p class="text-white-50">Four scan modes from Ultra-Safe (large public sites) to Aggressive (thorough testing)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works Section -->
+            <div class="card glass-card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-cogs fa-fw text-primary me-2"></i>How Vanguard Works</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex mb-3">
+                                <div class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 24px; font-weight: bold;">1</div>
+                                <div class="ms-3">
+                                    <h5>Crawling</h5>
+                                    <p class="text-white-50 mb-0">Discovers all pages, forms, and endpoints of the target website</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex mb-3">
+                                <div class="step-number bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 24px; font-weight: bold;">2</div>
+                                <div class="ms-3">
+                                    <h5>Scanning</h5>
+                                    <p class="text-white-50 mb-0">Runs multiple vulnerability scanners based on the selected mode</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex mb-3">
+                                <div class="step-number bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 24px; font-weight: bold;">3</div>
+                                <div class="ms-3">
+                                    <h5>Scoring</h5>
+                                    <p class="text-white-50 mb-0">Computes real CVSS scores with temporal and environmental metrics</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex mb-3">
+                                <div class="step-number bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 24px; font-weight: bold;">4</div>
+                                <div class="ms-3">
+                                    <h5>Reporting</h5>
+                                    <p class="text-white-50 mb-0">Generates detailed reports with priorities, CVSS scores, and remediation guidance</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scan Modes Section -->
+            <div class="card glass-card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-toggle-on fa-fw text-primary me-2"></i>Scan Modes</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-cog fa-fw me-1"></i>Mode</th>
+                                    <th><i class="fas fa-tachometer-alt fa-fw me-1"></i>Intensity</th>
+                                    <th><i class="fas fa-crosshairs fa-fw me-1"></i>What It Scans</th>
+                                    <th><i class="fas fa-info-circle fa-fw me-1"></i>Use Case</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="badge bg-success"><i class="fas fa-shield-check fa-fw"></i> Ultra-Safe</span></td>
+                                    <td><span class="badge bg-secondary">Minimal</span></td>
+                                    <td>
+                                        <ul class="mb-0 text-white-50">
+                                            <li>Basic misconfig checks</li>
+                                            <li>Sensitive file detection</li>
+                                            <li>Headers analysis (selective)</li>
+                                        </ul>
+                                    </td>
+                                    <td class="text-white-50">Large public sites (Google, Facebook, etc.) - Very minimal impact</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-info"><i class="fas fa-shield-alt fa-fw"></i> Safe</span></td>
+                                    <td><span class="badge bg-warning">Low</span></td>
+                                    <td>
+                                        <ul class="mb-0 text-white-50">
+                                            <li>All above</li>
+                                            <li>Quick SQL injection tests</li>
+                                            <li>Quick XSS tests</li>
+                                        </ul>
+                                    </td>
+                                    <td class="text-white-50">Fast scans with reduced checks - Minimal false positives</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-primary"><i class="fas fa-balance-scale fa-fw"></i> Standard</span></td>
+                                    <td><span class="badge bg-info">Medium</span></td>
+                                    <td>
+                                        <ul class="mb-0 text-white-50">
+                                            <li>All above</li>
+                                            <li>Full security headers analysis</li>
+                                            <li>Comprehensive SQL injection detection</li>
+                                            <li>Context-aware XSS testing</li>
+                                            <li>Directory listing checks</li>
+                                            <li>CORS misconfiguration</li>
+                                            <li>Cookie security flags</li>
+                                            <li>CSRF token checks</li>
+                                        </ul>
+                                    </td>
+                                    <td class="text-white-50"><strong class="text-success">Recommended</strong> - Balanced coverage</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-danger"><i class="fas fa-fire fa-fw"></i> Aggressive</span></td>
+                                    <td><span class="badge bg-danger">High</span></td>
+                                    <td>
+                                        <ul class="mb-0 text-white-50">
+                                            <li>Everything in Standard</li>
+                                            <li>Open redirect testing</li>
+                                            <li>URL parameter fuzzing</li>
+                                            <li>Extended payload testing</li>
+                                            <li>Context breaking tests</li>
+                                            <li>All XSS variants</li>
+                                            <li>All SQL injection types</li>
+                                        </ul>
+                                    </td>
+                                    <td class="text-white-50">Thorough testing - May have some false positives</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vulnerability Types Section -->
+            <div class="card glass-card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-bug fa-fw text-primary me-2"></i>Vulnerability Types Detected</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);">
+                                <div class="card-body">
+                                    <h5 class="text-danger"><i class="fas fa-database fa-fw"></i> SQL Injection</h5>
+                                    <ul class="text-white-50 mb-2">
+                                        <li>Error-based SQLi</li>
+                                        <li>Time-based blind SQLi</li>
+                                        <li>Boolean-based blind SQLi</li>
+                                        <li>UNION-based SQLi</li>
+                                    </ul>
+                                    <small class="text-muted">Automatic verification to reduce false positives</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);">
+                                <div class="card-body">
+                                    <h5 class="text-warning"><i class="fas fa-code fa-fw"></i> Cross-Site Scripting (XSS)</h5>
+                                    <ul class="text-white-50 mb-2">
+                                        <li>Reflected XSS</li>
+                                        <li>Stored XSS</li>
+                                        <li>DOM-based XSS</li>
+                                        <li>Context-aware detection</li>
+                                    </ul>
+                                    <small class="text-muted">Filters search engines and known false positives</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);">
+                                <div class="card-body">
+                                    <h5 class="text-info"><i class="fas fa-server fa-fw"></i> Security Headers</h5>
+                                    <ul class="text-white-50 mb-2">
+                                        <li>X-Frame-Options</li>
+                                        <li>Content-Security-Policy</li>
+                                        <li>Strict-Transport-Security</li>
+                                        <li>X-Content-Type-Options</li>
+                                        <li>Referrer-Policy</li>
+                                        <li>Permissions-Policy</li>
+                                    </ul>
+                                    <small class="text-muted">Multi-page analysis with alternatives detection</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);">
+                                <div class="card-body">
+                                    <h5 class="text-success"><i class="fas fa-exclamation-triangle fa-fw"></i> Misconfigurations</h5>
+                                    <ul class="text-white-50 mb-2">
+                                        <li>Directory listing</li>
+                                        <li>Exposed sensitive files</li>
+                                        <li>CORS misconfigurations</li>
+                                        <li>Cookie security flags</li>
+                                        <li>Missing CSRF tokens</li>
+                                        <li>Information disclosure</li>
+                                    </ul>
+                                    <small class="text-muted">40+ patterns and file types</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <div class="card" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);">
+                                <div class="card-body">
+                                    <h5 class="text-primary"><i class="fas fa-redo fa-fw"></i> Open Redirect</h5>
+                                    <p class="text-white-50 mb-0">Tests for dangerous redirects that could be used in phishing attacks. Only runs in Aggressive mode.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Features -->
+            <div class="card glass-card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-star fa-fw text-primary me-2"></i>Advanced CVSS Scoring</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4">
+                            <i class="fas fa-calculator fa-3x text-primary mb-3"></i>
+                            <h5>Real CVSS Computation</h5>
+                            <p class="text-white-50">Computes actual CVSS vectors from vulnerability characteristics, not rough mappings</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-4">
+                            <i class="fas fa-layer-group fa-3x text-warning mb-3"></i>
+                            <h5>Impact Breakdown</h5>
+                            <p class="text-white-50">Separate Impact and Exploitability scores for detailed vulnerability analysis</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-4">
+                            <i class="fas fa-crosshairs fa-3x text-success mb-3"></i>
+                            <h5>Temporal Metrics</h5>
+                            <p class="text-white-50">Checks if exploits are published and adjusts priority accordingly</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-4">
+                            <i class="fas fa-server fa-3x text-info mb-3"></i>
+                            <h5>Asset Criticality</h5>
+                            <p class="text-white-50">Adjusts scores based on asset importance (1-10 scale)</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-4">
+                            <i class="fas fa-check-double fa-3x text-danger mb-3"></i>
+                            <h5>Auto Deduplication</h5>
+                            <p class="text-white-50">Merges findings from multiple scanners and boosts confidence</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-4">
+                            <i class="fas fa-trophy fa-3x text-success mb-3"></i>
+                            <h5>Final Priority</h5>
+                            <p class="text-white-50">Multi-factor priority computation combining CVSS, confidence, assets, and exploits</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authentication Support -->
+            <div class="card glass-card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-key fa-fw text-primary me-2"></i>Authentication Support</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-alt fa-3x text-primary mb-3"></i>
+                                    <h5>Form-Based Auth</h5>
+                                    <p class="text-white-50">Automatically logs into forms with username/password</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-ticket-alt fa-3x text-warning mb-3"></i>
+                                    <h5>Token-Based Auth</h5>
+                                    <p class="text-white-50">Uses bearer tokens or custom headers for authentication</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card" style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color);">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-user-shield fa-3x text-success mb-3"></i>
+                                    <h5>HTTP Basic Auth</h5>
+                                    <p class="text-white-50">Standard HTTP Basic authentication support</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Features -->
+            <div class="card glass-card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-file-alt fa-fw text-primary me-2"></i>Report Features</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-check-circle text-success fa-fw"></i> What's Included</h5>
+                            <ul class="text-white-50">
+                                <li>Detailed vulnerability descriptions</li>
+                                <li>Exact URLs and locations</li>
+                                <li>Payloads that trigger vulnerabilities</li>
+                                <li>Evidence and verification details</li>
+                                <li>CVSS scores and vectors</li>
+                                <li>CWE mappings</li>
+                                <li>Confidence levels</li>
+                                <li>Priority recommendations</li>
+                                <li>Remediation guidance</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-download text-primary fa-fw"></i> Export Formats</h5>
+                            <ul class="text-white-50">
+                                <li><strong>JSON:</strong> Full machine-readable data</li>
+                                <li><strong>Markdown:</strong> Human-readable reports</li>
+                                <li><strong>HTML:</strong> Beautiful formatted reports</li>
+                                <li>Download from Results or History page</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Start -->
+            <div class="card glass-card">
+                <div class="card-header bg-primary">
+                    <h3 class="mb-0 text-white"><i class="fas fa-rocket fa-fw me-2"></i>Quick Start</h3>
+                </div>
+                <div class="card-body">
+                    <ol class="text-white-50">
+                        <li class="mb-3">
+                            <strong class="text-white">Enter target URL</strong> - Enter the website URL you want to scan
+                        </li>
+                        <li class="mb-3">
+                            <strong class="text-white">Choose scan mode</strong> - Select from Ultra-Safe, Safe, Standard (recommended), or Aggressive
+                        </li>
+                        <li class="mb-3">
+                            <strong class="text-white">Optional authentication</strong> - Add credentials if the site requires login
+                        </li>
+                        <li class="mb-3">
+                            <strong class="text-white">Start scan</strong> - Click "Start Scan" and watch the progress
+                        </li>
+                        <li class="mb-0">
+                            <strong class="text-white">Review results</strong> - Analyze vulnerabilities with detailed CVSS scores, priorities, and recommendations
+                        </li>
+                    </ol>
+                    <div class="text-center mt-4">
+                        <a href="/" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search fa-fw me-2"></i>Start Your First Scan
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add any interactive features here if needed
+</script>
+{% endblock %}
+

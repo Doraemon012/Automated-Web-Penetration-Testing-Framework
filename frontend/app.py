@@ -17,10 +17,22 @@ try:
     from scanners.sqli import test_sqli
     from scanners.xss import test_xss
     from scanners.misconfig import check_misconfig, check_open_redirect, fuzz_url_params
+    from scanners.injection import test_command_injection, test_authentication_weaknesses, test_ssrf, test_xml_injection, test_html_injection
+    from scanners.file_upload import test_file_upload
     from reports.reporter import Reporter
     from reports.risk import enrich_findings
+    from reports.cvss_compute import enhance_finding_with_cvss, deduplicate_findings
+    
+    # Try to import JS crawler, but don't fail if not available
+    try:
+        from crawler.js_crawler import JSCrawler
+        JS_CRAWLER_AVAILABLE = True
+    except ImportError:
+        JS_CRAWLER_AVAILABLE = False
+        print("JavaScript crawler not available. Install playwright: pip install playwright && playwright install")
 except ImportError as e:
     print(f"Could not import project modules. Make sure your project structure is correct. Error: {e}")
+    JS_CRAWLER_AVAILABLE = False
     # Define dummy classes/functions if imports fail, to allow the app to at least start.
     class Reporter:
         def __init__(self): self.findings = []
@@ -83,7 +95,14 @@ def run_scan_background(target_url, scan_config=None):
             if not success:
                 scan_status.update({'current_task': 'Authentication failed, continuing with unauthenticated scan...', 'progress': 20})
         
-        scan_status.update({'current_task': 'Starting crawler...', 'progress': 25})
+        # Check if JS rendering is enabled
+        js_enabled = scan_config.get('js_enabled', False) if scan_config else False
+        use_jscrawler = js_enabled and JS_CRAWLER_AVAILABLE
+        
+        print(f"[DEBUG] Full scan_config: {scan_config}")
+        print(f"[DEBUG] js_enabled from config: {js_enabled}, JS_CRAWLER_AVAILABLE: {JS_CRAWLER_AVAILABLE}, use_jscrawler: {use_jscrawler}")
+        
+        scan_status.update({'current_task': f'Starting {"JavaScript-enabled" if use_jscrawler else "regular"} crawler...', 'progress': 25})
         
         # Adjust crawl scope based on mode
         mode = scan_config.get('mode', 'standard') if scan_config else 'standard'
@@ -93,9 +112,40 @@ def run_scan_background(target_url, scan_config=None):
             max_depth = 1
         else:
             max_depth = 2
-        crawler = Crawler(target, max_depth=max_depth, session_manager=session_manager)
-        crawler.crawl()
-        crawler.save_results()
+        
+        # Choose crawler based on JS support
+        if use_jscrawler:
+            print("[+] Using JavaScript-enabled crawler (Playwright)")
+            print("[+] This will take longer but finds more vulnerabilities on JS-heavy sites")
+            import asyncio
+            from concurrent.futures import ThreadPoolExecutor
+            
+            crawler = JSCrawler(target, max_depth=max_depth, session_manager=session_manager)
+            
+            # Run async crawler in thread pool
+            def run_async_crawl():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(crawler.run_crawl())
+                finally:
+                    loop.close()
+            
+            with ThreadPoolExecutor() as executor:
+                future = executor.submit(run_async_crawl)
+                future.result(timeout=300)  # 5 minute timeout
+            
+            crawler.save_results()
+        else:
+            if js_enabled and not JS_CRAWLER_AVAILABLE:
+                print("[-] JavaScript crawler requested but not available.")
+                print("[!] To use JavaScript crawler, install Playwright:")
+                print("[!]   pip install playwright")
+                print("[!]   playwright install chromium")
+                print("[!] Using regular HTML crawler instead...")
+            crawler = Crawler(target, max_depth=max_depth, session_manager=session_manager)
+            crawler.crawl()
+            crawler.save_results()
         
         reporter = Reporter()
         
@@ -108,41 +158,85 @@ def run_scan_background(target_url, scan_config=None):
         is_large_site = is_large_public_site(target)
         
         scan_status.update({'current_task': 'Analyzing security headers...', 'progress': 40})
-        if mode != 'ultra-safe' or not is_large_site:
-            reporter.add_findings(check_security_headers(target, session, discovered_links))
+        print("[DEBUG] Checking headers...")
+        if mode == 'ultra-safe':
+            print("[DEBUG] Skipping headers for ultra-safe mode")
+            scan_status.update({'current_task': 'Skipping headers analysis in ultra-safe mode...', 'progress': 45})
         else:
-            scan_status.update({'current_task': 'Skipping headers analysis for large public site in ultra-safe mode...', 'progress': 45})
+            reporter.add_findings(check_security_headers(target, session, discovered_links))
+            print("[DEBUG] Headers check complete")
         
-        if mode in ('standard', 'aggressive') or (mode == 'ultra-safe' and not is_large_site):
+        if mode != 'ultra-safe':
             scan_status.update({'current_task': 'Testing for SQL injection...', 'progress': 50})
-            reporter.add_findings(test_sqli(target, crawler.discovered["forms"], session))
+            print(f"[DEBUG] Checking SQLi in {mode} mode...")
+            reporter.add_findings(test_sqli(target, crawler.discovered["forms"], session, mode=mode))
+            print("[DEBUG] SQLi check complete")
+        else:
+            print("[DEBUG] Skipping SQLi for ultra-safe mode")
+            scan_status.update({'current_task': 'Skipping SQL injection testing in ultra-safe mode...', 'progress': 55})
         
-        scan_status.update({'current_task': 'Testing for XSS vulnerabilities...', 'progress': 60})
-        if mode != 'ultra-safe' or not is_large_site:
+        if mode != 'ultra-safe':
+            scan_status.update({'current_task': 'Testing for XSS vulnerabilities...', 'progress': 55})
+            print("[DEBUG] Checking XSS...")
             strict_xss = (mode != 'aggressive')
             reporter.add_findings(test_xss(target, crawler.discovered["forms"], session, strict=strict_xss))
+            print("[DEBUG] XSS check complete")
         else:
-            scan_status.update({'current_task': 'Skipping XSS testing for large public site in ultra-safe mode...', 'progress': 65})
+            print("[DEBUG] Skipping XSS for ultra-safe mode")
+            scan_status.update({'current_task': 'Skipping XSS testing in ultra-safe mode...', 'progress': 60})
         
-        scan_status.update({'current_task': 'Checking for misconfigurations...', 'progress': 70})
-        reporter.add_findings(check_misconfig(target, session))
+        if mode != 'ultra-safe':
+            scan_status.update({'current_task': 'Checking for misconfigurations...', 'progress': 60})
+            print("[DEBUG] Checking misconfig...")
+            reporter.add_findings(check_misconfig(target, session))
+            print("[DEBUG] Misconfig check complete")
+        else:
+            print("[DEBUG] Skipping misconfig for ultra-safe mode")
+            scan_status.update({'current_task': 'Skipping misconfig checks in ultra-safe mode...', 'progress': 65})
+        
+        if mode in ('standard', 'aggressive'):
+            scan_status.update({'current_task': 'Testing for authentication weaknesses...', 'progress': 65})
+            reporter.add_findings(test_authentication_weaknesses(target, session))
         
         if mode == 'aggressive':
-            scan_status.update({'current_task': 'Testing for open redirects...', 'progress': 80})
+            scan_status.update({'current_task': 'Testing for command injection...', 'progress': 70})
+            reporter.add_findings(test_command_injection(target, crawler.discovered["forms"], session))
+            
+            scan_status.update({'current_task': 'Testing for file upload vulnerabilities...', 'progress': 72})
+            reporter.add_findings(test_file_upload(target, crawler.discovered["forms"], session))
+            
+            scan_status.update({'current_task': 'Testing for XML/XXE injection...', 'progress': 74})
+            reporter.add_findings(test_xml_injection(target, crawler.discovered["forms"], session))
+            
+            scan_status.update({'current_task': 'Testing for HTML injection...', 'progress': 76})
+            reporter.add_findings(test_html_injection(target, crawler.discovered["forms"], session))
+            
+            scan_status.update({'current_task': 'Testing for open redirects...', 'progress': 78})
             reporter.add_findings(check_open_redirect(target, discovered_links, session))
-        
-        if mode == 'aggressive':
-            scan_status.update({'current_task': 'Fuzzing URL parameters...', 'progress': 90})
-            for link in discovered_links:
+            
+            scan_status.update({'current_task': 'Testing for SSRF vulnerabilities...', 'progress': 80})
+            reporter.add_findings(test_ssrf(target, crawler.discovered["forms"], discovered_links, session))
+            
+            scan_status.update({'current_task': 'Fuzzing URL parameters...', 'progress': 85})
+            for link in discovered_links[:20]:  # Limit to 20 links to avoid excessive requests
                 reporter.add_findings(fuzz_url_params(link, session=session))
         
+        print(f"[DEBUG] All scans complete. Total findings: {len(reporter.findings)}")
         scan_status.update({'current_task': 'Generating reports...', 'progress': 95})
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         json_filename = f"report_{timestamp}.json"
         md_filename = f"report_{timestamp}.md"
         
-        # Enrich findings with risk metadata
+        # Enhanced CVSS scoring pipeline
+        print(f"[DEBUG] Starting CVSS enrichment for {len(reporter.findings)} findings...")
+        reporter.findings = [enhance_finding_with_cvss(f) for f in reporter.findings]
+        print(f"[DEBUG] CVSS enrichment complete. Deduplicating...")
+        reporter.findings = deduplicate_findings(reporter.findings)
+        print(f"[DEBUG] Deduplication complete. {len(reporter.findings)} unique findings.")
+        print(f"[DEBUG] Finalizing report generation...")
+        
+        # Apply CWE mapping from existing risk.py
         reporter.findings = enrich_findings(reporter.findings)
         
         # Prepare the results dictionary
@@ -184,7 +278,12 @@ def run_scan_background(target_url, scan_config=None):
         scan_status.update({'current_task': 'Scan completed!', 'progress': 100})
         
     except Exception as e:
-        scan_status['error'] = str(e)
+        import traceback
+        error_msg = str(e)
+        traceback_str = traceback.format_exc()
+        print(f"[ERROR] Scan failed: {error_msg}")
+        print(f"[ERROR] Traceback:\n{traceback_str}")
+        scan_status['error'] = error_msg
     finally:
         scan_status['running'] = False
 
@@ -210,7 +309,8 @@ def start_scan():
         'username': data.get('username', ''),
         'password': data.get('password', ''),
         'login_url': data.get('login_url', ''),
-        'token': data.get('token', '')
+        'token': data.get('token', ''),
+        'js_enabled': data.get('js_enabled', False)
     }
     
     scan_status = {'running': True, 'progress': 0, 'current_task': 'Starting scan...', 'results': None, 'error': None}
@@ -307,6 +407,10 @@ def scan_history():
                 print(f"Could not process report file {file}: {e}")
     
     return render_template('history.html', reports=reports)
+
+@app.route('/docs')
+def docs():
+    return render_template('docs.html')
 
 if __name__ == '__main__':
     # Make sure you have a 'templates' folder with your html files in it.

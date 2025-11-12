@@ -92,6 +92,22 @@
                             </div>
                         </div>
 
+                        <!-- Advanced Options Section -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-code fa-fw me-2 text-info"></i>
+                                <h6 class="mb-0 text-white">Advanced Options</h6>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="enable-js" value="true">
+                                <label class="form-check-label text-white-50" for="enable-js">
+                                    <strong>Enable JavaScript Rendering</strong> (slower, finds more vulnerabilities on JS-heavy sites)
+                                    <br><small class="text-muted">Uses Playwright to crawl JavaScript-rendered content. Required for React, Vue, Angular apps.</small>
+                                </label>
+                            </div>
+                        </div>
+
                         <!-- Start Scan Button -->
                         <div class="d-grid">
                             <button type="button" class="btn btn-primary btn-lg" id="start-scan">
@@ -128,10 +144,50 @@
                     
                     <!-- Summary Cards -->
                     <div class="row mb-4">
-                        <div class="col-lg-3 col-md-6 mb-4"><div class="card summary-card h-100"><div class="card-body"><h3 id="total-vulns" class="text-primary-glow">0</h3><p class="mb-0">Total Findings</p></div></div></div>
-                        <div class="col-lg-3 col-md-6 mb-4"><div class="card summary-card h-100"><div class="card-body"><h3 id="high-vulns" class="severity-high">0</h3><p class="mb-0">High Severity</p></div></div></div>
-                        <div class="col-lg-3 col-md-6 mb-4"><div class="card summary-card h-100"><div class="card-body"><h3 id="medium-vulns" class="severity-medium">0</h3><p class="mb-0">Medium Severity</p></div></div></div>
-                        <div class="col-lg-3 col-md-6 mb-4"><div class="card summary-card h-100"><div class="card-body"><h3 id="low-vulns" class="severity-low">0</h3><p class="mb-0">Low Severity</p></div></div></div>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="card summary-card h-100" title="Total number of unique vulnerabilities found">
+                                <div class="card-body"><h3 id="total-vulns" class="text-primary-glow">0</h3><p class="mb-0"><i class="fas fa-bug fa-fw"></i> Total Findings</p></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="card summary-card h-100" title="Severity: High (CVSS 7.0-8.9) - Immediate attention needed">
+                                <div class="card-body"><h3 id="high-vulns" class="severity-high">0</h3><p class="mb-0"><i class="fas fa-exclamation-triangle fa-fw"></i> High Severity</p></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="card summary-card h-100" title="Severity: Medium (CVSS 4.0-6.9) - Should be addressed soon">
+                                <div class="card-body"><h3 id="medium-vulns" class="severity-medium">0</h3><p class="mb-0"><i class="fas fa-exclamation-circle fa-fw"></i> Medium Severity</p></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="card summary-card h-100" title="Severity: Low (CVSS 0.1-3.9) - Can be addressed as resources allow">
+                                <div class="card-body"><h3 id="low-vulns" class="severity-low">0</h3><p class="mb-0"><i class="fas fa-info-circle fa-fw"></i> Low Severity</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Enhanced Metrics Cards -->
+                    <div class="row mb-4" id="enhanced-metrics" style="display: none;">
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="card summary-card h-100 bg-gradient-danger" title="Average CVSS score across all findings. Higher score = more critical">
+                                <div class="card-body"><h3 id="avg-cvss" class="text-white">0.0</h3><p class="mb-0 text-white-50"><i class="fas fa-chart-bar fa-fw"></i> Avg CVSS Score</p></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="card summary-card h-100 bg-gradient-warning" title="Findings with Critical priority (highest remediation urgency)">
+                                <div class="card-body"><h3 id="critical-priority" class="text-white">0</h3><p class="mb-0 text-white-50"><i class="fas fa-flag fa-fw"></i> Critical Priority</p></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="card summary-card h-100 bg-gradient-info" title="Findings with published exploits (actively exploited in the wild)">
+                                <div class="card-body"><h3 id="with-exploit" class="text-white">0</h3><p class="mb-0 text-white-50"><i class="fas fa-bug fa-fw"></i> With Exploits</p></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="card summary-card h-100 bg-gradient-success" title="Findings with 80%+ confidence (highly reliable detections)">
+                                <div class="card-body"><h3 id="high-confidence" class="text-white">0</h3><p class="mb-0 text-white-50"><i class="fas fa-check-double fa-fw"></i> High Confidence</p></div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Details Card -->
@@ -143,9 +199,27 @@
                                 <button type="button" class="btn btn-sm btn-outline-light" id="download-md"><i class="fab fa-markdown fa-fw"></i> Markdown</button>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="accordion" id="vulnerability-accordion">
+                        <div class="card-body p-0" style="min-height: 500px;">
+                            <div class="vulnerability-container">
+                                <div class="vulnerability-list-panel" id="list-panel">
+                                    <div id="vulnerability-accordion">
                                 <!-- Vulnerabilities will be dynamically injected here -->
+                                    </div>
+                                </div>
+                                <div class="vulnerability-detail-panel" id="detail-panel">
+                                    <div class="detail-header-controls" style="padding: 10px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
+                                        <button class="btn btn-sm btn-outline-primary" id="prev-vuln" onclick="navigateVuln(-1)" style="display: none;" title="Previous">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-light" id="expand-minimize-btn" onclick="toggleExpandMinimize()" title="Expand">
+                                            <i class="fas fa-expand"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary" id="next-vuln" onclick="navigateVuln(1)" style="display: none;" title="Next">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                    <div class="detail-content" id="detail-content"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -215,6 +289,144 @@ $(document).ready(function() {
         what: "An Open Redirect is a vulnerability where an application uses a user-supplied parameter to redirect the user to another URL without proper validation.",
         how: "An attacker can craft a link to your trusted website that contains a redirect parameter pointing to a malicious site. For example: `https://your-trusted-site.com/redirect?url=https://malicious-phishing-site.com`. A user sees the trusted domain, clicks the link, and is then unknowingly redirected to the attacker's phishing page.",
         prevention: "<strong>Avoid using redirects that rely on user-supplied destinations.</strong> If you must, maintain a server-side whitelist of approved and safe URLs. Reject any redirect request that does not match an entry in the whitelist."
+    },
+    'Command Injection': {
+        title: 'Command Injection (OS Injection)',
+        what: "Command Injection is an attack technique used for unauthorized execution of operating system commands. This attack is possible when an application passes unsafe user supplied data to a system shell.",
+        how: "An attacker injects malicious commands (like `; cat /etc/passwd` or `| whoami`) into user input fields. If the application passes this input directly to the system shell without proper sanitization, the commands are executed on the server, giving the attacker control over the system.",
+        prevention: "<ul><li><strong>Avoid shell execution altogether:</strong> Use safe APIs that don't invoke the shell.</li><li><strong>If shell execution is unavoidable:</strong> Validate and whitelist allowed commands and arguments, never trust user input.</li><li><strong>Use parameterized commands:</strong> Pass arguments as arrays, not as command strings.</li><li><strong>Run with least privilege:</strong> Execute commands with minimal required permissions.</li></ul>"
+    },
+    'Weak Login Page Security': {
+        title: 'Weak Login Page Security',
+        what: "Login pages that lack essential security features like rate limiting, CAPTCHA protection, strong password requirements, and account lockout mechanisms are vulnerable to brute force attacks.",
+        how: "Attackers can repeatedly attempt to guess passwords without rate limiting, use automated tools for brute force attacks, and easily bypass weak login protections to gain unauthorized access to accounts.",
+        prevention: "<ul><li><strong>Implement Rate Limiting:</strong> Limit login attempts per IP or account.</li><li><strong>Add CAPTCHA:</strong> Prevent automated attacks after a few failed attempts.</li><li><strong>Strong Password Policy:</strong> Require complex passwords with minimum length, mixed case, numbers, and special characters.</li><li><strong>Account Lockout:</strong> Temporarily lock accounts after repeated failed login attempts.</li><li><strong>CSRF Protection:</strong> Include CSRF tokens in login forms.</li></ul>"
+    },
+    'Broken Access Control': {
+        title: 'Broken Access Control',
+        what: "Broken Access Control occurs when an application fails to properly enforce authorization restrictions, allowing unauthorized users to access privileged resources or perform restricted actions.",
+        how: "Attackers can directly access admin panels, view other users' data, modify accounts without permission, or access internal APIs that should require authentication.",
+        prevention: "<ul><li><strong>Enforce Authorization on Every Request:</strong> Don't rely on clients hiding URLs.</li><li><strong>Verify Permissions on All Privileged Actions:</strong> Check user permissions on the server side for every action.</li><li><strong>Implement Role-Based Access Control (RBAC):</strong> Define clear roles and enforce access accordingly.</li><li><strong>Use Authentication Tokens:</strong> Properly implement and validate JWT or session tokens.</li></ul>"
+    },
+    'Server-Side Request Forgery (SSRF)': {
+        title: 'Server-Side Request Forgery (SSRF)',
+        what: "SSRF attacks allow an attacker to induce the server-side application to make HTTP requests to an任意 URL of the attacker's choosing.",
+        how: "An attacker exploits a vulnerable parameter (like `url=`, `fetch=`, or `api=`) to make the server request internal services (like 127.0.0.1, localhost) or external malicious sites. This can lead to data exfiltration, internal network probing, or cloud metadata service access.",
+        prevention: "<ul><li><strong>Whitelist Allowed URLs:</strong> Maintain a strict whitelist of permitted destinations.</li><li><strong>Block Internal IPs:</strong> Reject requests to private IP ranges (127.0.0.1, 10.0.0.0/8, 192.168.0.0/16).</li><li><strong>Validate URL Schemes:</strong> Only allow http:// and https:// protocols.</li><li><strong>Use Network Segmentation:</strong> Limit the network access of application servers.</li></ul>"
+    },
+    'Insecure File Upload': {
+        title: 'Insecure File Upload Vulnerability',
+        what: "Applications that allow file uploads without proper validation can be exploited to upload malicious files (executables, webshells) or perform directory traversal attacks.",
+        how: "Attackers upload malicious files (PHP shells, executables, .htaccess files) or manipulate filenames to access restricted directories or execute code on the server.",
+        prevention: "<ul><li><strong>Whitelist File Types:</strong> Only allow specific, safe file extensions and validate MIME types.</li><li><strong>Validate File Content:</strong> Check file magic bytes, not just extension or content-type header.</li><li><strong>Sanitize Filenames:</strong> Remove special characters and directory traversal sequences.</li><li><strong>Store Files Securely:</strong> Upload to directory outside web root or use random filenames.</li><li><strong>Set Size Limits:</strong> Enforce maximum file size to prevent DoS attacks.</li></ul>"
+    },
+    'XML External Entity (XXE) Injection': {
+        title: 'XML External Entity (XXE) Injection',
+        what: "XXE vulnerabilities occur when an application processes XML input containing external entity references, allowing attackers to read local files or perform SSRF attacks.",
+        how: "Attacker crafts XML payloads with external entity declarations that reference local files (like /etc/passwd) or external URLs. The XML parser processes these entities and includes sensitive data in the response.",
+        prevention: "<ul><li><strong>Disable External Entity Processing:</strong> Configure XML parser to ignore DOCTYPE declarations and external entities.</li><li><strong>Use Safe XML Parsers:</strong> Use libraries that disable external entity processing by default.</li><li><strong>Whitelist XML Input:</strong> Validate XML against schema before processing.</li><li><strong>Minimize XML Parsing:</strong> Prefer JSON or other formats over XML.</li></ul>"
+    },
+    'XML Injection': {
+        title: 'XML Injection',
+        what: "XML Injection occurs when an application accepts and processes XML input without proper validation, potentially leading to XXE, XML bombs, or data manipulation.",
+        how: "Attacker injects malicious XML content to exploit parser vulnerabilities, bypass authorization checks, or manipulate application logic.",
+        prevention: "<ul><li><strong>Validate XML Input:</strong> Use XML schema (XSD) validation before processing.</li><li><strong>Sanitize User Input:</strong> Encode special XML characters (&lt;, &gt;, &amp;, etc.).</li><li><strong>Limit Parser Features:</strong> Disable dangerous XML features like external entities, CDATA, etc.</li><li><strong>Use Prepared Statements:</strong> Parameterize XML queries.</li></ul>"
+    },
+    'HTML Injection': {
+        title: 'HTML Injection',
+        what: "HTML Injection occurs when user input is reflected in HTML responses without proper encoding, allowing attackers to inject arbitrary HTML elements.",
+        how: "Attacker submits HTML tags in input fields. If reflected unencoded, these tags are rendered in the browser, potentially leading to XSS or content spoofing attacks.",
+        prevention: "<ul><li><strong>Output Encoding:</strong> Encode all user input before rendering in HTML context (use HTML entity encoding).</li><li><strong>Content Security Policy:</strong> Implement CSP to restrict script execution.</li><li><strong>Input Validation:</strong> Reject or sanitize HTML tags in user input.</li><li><strong>Use Framework Escaping:</strong> Leverage framework's built-in HTML escaping functions.</li></ul>"
+    },
+    'Insecure File Upload: PHP Script': {
+        title: 'Insecure File Upload: PHP Script',
+        what: "Application accepts PHP files for upload, allowing attackers to execute code on the server.",
+        how: "Attacker uploads a PHP shell script that can execute arbitrary commands on the server, leading to remote code execution and full system compromise.",
+        prevention: "Whitelist safe file types only, validate file content using magic bytes, store uploads outside web root with random names."
+    },
+    'Insecure File Upload: Server Script': {
+        title: 'Insecure File Upload: Server Script',
+        what: "Application accepts server-side scripts (ASP, JSP) that can execute code on the server.",
+        how: "Uploaded server scripts can execute arbitrary commands, access the filesystem, and compromise the application.",
+        prevention: "Prevent uploads of executable scripts. Whitelist only safe file types and validate content."
+    },
+    'Insecure File Upload: Executable': {
+        title: 'Insecure File Upload: Executable File',
+        what: "Application accepts executable files (.exe, .sh, .bat) that could contain malware.",
+        how: "Uploaded executables can contain malware, backdoors, or system exploits that compromise server security.",
+        prevention: "Block all executable file types. Scan uploaded files with antivirus and validate thoroughly."
+    },
+    'Insecure File Upload: Apache Configuration': {
+        title: 'Insecure File Upload: Apache Configuration',
+        what: "Application accepts .htaccess files that can modify Apache configuration.",
+        how: ".htaccess files can override server settings, enable PHP execution, or redirect traffic to malicious sites.",
+        prevention: "Block .htaccess uploads and other configuration files. Use server-level configuration."
+    },
+    'Insecure File Upload: HTML/JavaScript': {
+        title: 'Insecure File Upload: HTML/JavaScript',
+        what: "Application accepts HTML files that can contain malicious JavaScript.",
+        how: "Uploaded HTML files can execute XSS attacks when accessed, stealing cookies or session tokens.",
+        prevention: "Validate and sanitize HTML content. Use Content Security Policy to prevent XSS."
+    },
+    'Path Traversal in File Upload': {
+        title: 'Path Traversal in File Upload',
+        what: "File upload allows path traversal sequences (../../) in filenames, enabling uploads to arbitrary directories.",
+        how: "Attacker crafts filenames like '../../malicious.php' to upload files outside intended directories, potentially accessing sensitive areas.",
+        prevention: "Strip directory traversal sequences from filenames. Use absolute paths and random generated filenames."
+    },
+    'Missing File Size Limits': {
+        title: 'Missing File Size Limits',
+        what: "Application doesn't enforce file size limits on uploads, allowing potential DoS attacks.",
+        how: "Large file uploads can consume server resources, disk space, and bandwidth, leading to denial of service.",
+        prevention: "Implement strict file size limits on both client and server side. Monitor upload sizes."
+    },
+    'Content-Type Validation Bypass': {
+        title: 'Content-Type Validation Bypass',
+        what: "Application validates files based on Content-Type header only, which can be spoofed.",
+        how: "Attacker changes Content-Type header to 'image/jpeg' while uploading a PHP shell, bypassing validation.",
+        prevention: "Validate actual file content using magic bytes (file signature), not just headers or extensions."
+    },
+    'Directory Traversal in Uploaded Filename': {
+        title: 'Directory Traversal in Uploaded Filename',
+        what: "Uploaded files can be placed in arbitrary directories through path traversal in filenames.",
+        how: "Filenames containing ../../../ allow placing files in parent directories, potentially accessing web root or sensitive locations.",
+        prevention: "Sanitize filenames, strip traversal sequences, use absolute storage paths with random names."
+    },
+    'Command Injection (Unix)': {
+        title: 'Command Injection (Unix/Linux)',
+        what: "Application executes Unix shell commands with user input, allowing arbitrary command execution.",
+        how: "Attacker injects Unix commands like '; cat /etc/passwd' or '| whoami' to read files or execute system commands.",
+        prevention: "Avoid shell execution. Use parameterized APIs. If necessary, whitelist allowed commands and validate inputs."
+    },
+    'Command Injection (Windows)': {
+        title: 'Command Injection (Windows)',
+        what: "Application executes Windows CMD commands with user input, allowing arbitrary command execution.",
+        how: "Attacker injects Windows commands like '& dir' or '| type C:\\Windows\\System32\\hosts' to execute system commands.",
+        prevention: "Avoid shell execution. Use .NET APIs instead of Process.Start with shell. Validate all inputs."
+    },
+    'Command Injection (Time-based Blind)': {
+        title: 'Command Injection (Time-based Blind)',
+        what: "Application executes commands based on user input but doesn't return output (blind execution).",
+        how: "Attacker uses time delays ('sleep 5') to confirm command injection even when output isn't visible.",
+        prevention: "Never execute user input as commands. Use safe APIs and parameterized functions."
+    },
+    'Session ID in URL': {
+        title: 'Session ID in URL',
+        what: "Session identifier is exposed in URL parameters instead of being stored in secure cookies.",
+        how: "Session IDs in URLs are logged in server logs, browser history, and shared URLs, exposing session tokens to attackers.",
+        prevention: "Store session IDs in HttpOnly, Secure cookies. Never include session tokens in URLs or logs."
+    },
+    'Insecure Cookie (Missing Secure Flag)': {
+        title: 'Insecure Cookie - Missing Secure Flag',
+        what: "Session cookies lack the Secure flag, allowing transmission over unencrypted HTTP connections.",
+        how: "On HTTP sites, session cookies can be intercepted by attackers on the same network, allowing session hijacking.",
+        prevention: "Always set Secure flag on session cookies when using HTTPS. Force HTTPS for all authentication."
+    },
+    'Cookie Missing HttpOnly Flag': {
+        title: 'Cookie Missing HttpOnly Flag',
+        what: "Session cookies lack the HttpOnly flag, making them accessible to JavaScript.",
+        how: "If XSS is found, attacker can steal cookies via document.cookie, leading to session hijacking.",
+        prevention: "Set HttpOnly flag on all session cookies to prevent JavaScript access."
     }
         // ✅ Add other entries similarly (always use backticks for multiline text)
     };
@@ -266,6 +478,9 @@ $(document).ready(function() {
         $('#start-scan').prop('disabled', true);
         
         // Collect scan configuration
+        const jsEnabled = $('#enable-js').is(':checked');
+        console.log('[DEBUG] Checkbox checked:', jsEnabled);
+        
         const scanConfig = {
             url: url,
             mode: $('#scan-mode').val(),
@@ -273,8 +488,11 @@ $(document).ready(function() {
             username: $('#username').val(),
             password: $('#password').val(),
             login_url: $('#login-url').val(),
-            token: $('#token').val()
+            token: $('#token').val(),
+            js_enabled: jsEnabled
         };
+        
+        console.log('[DEBUG] Sending scan config:', scanConfig);
         
         $.ajax({
             url: '/api/scan',
@@ -333,10 +551,46 @@ $(document).ready(function() {
         $('#medium-vulns').text(results.vulnerabilities_by_severity.Medium || 0);
         $('#low-vulns').text(results.vulnerabilities_by_severity.Low || 0);
         
+        // Calculate enhanced metrics
+        const findings = results.findings || [];
+        let totalCvss = 0;
+        let cvssCount = 0;
+        let criticalPriority = 0;
+        let withExploit = 0;
+        let highConfidence = 0;
+        
+        findings.forEach(finding => {
+            if (finding.cvss_base_score) {
+                totalCvss += finding.cvss_base_score;
+                cvssCount++;
+            }
+            if (finding.final_priority === 'Critical') {
+                criticalPriority++;
+            }
+            if (finding.exploit_published) {
+                withExploit++;
+            }
+            if (finding.confidence && typeof finding.confidence === 'number' && finding.confidence >= 0.8) {
+                highConfidence++;
+            }
+        });
+        
+        const avgCvss = cvssCount > 0 ? (totalCvss / cvssCount).toFixed(1) : '0.0';
+        
+        $('#avg-cvss').text(avgCvss);
+        $('#critical-priority').text(criticalPriority);
+        $('#with-exploit').text(withExploit);
+        $('#high-confidence').text(highConfidence);
+        
+        // Show enhanced metrics if any CVSS data exists
+        if (cvssCount > 0) {
+            $('#enhanced-metrics').show();
+        }
+        
         $('#download-json').off('click').on('click', () => downloadReport(results.json_report));
         $('#download-md').off('click').on('click', () => downloadReport(results.md_report));
         
-        displayVulnerabilityGroups(results.findings);
+        displayVulnerabilityGroups(findings);
     }
     
     function displayVulnerabilityGroups(findings) {
@@ -344,7 +598,7 @@ $(document).ready(function() {
         container.empty();
         
         if (findings.length === 0) {
-            container.html('<div class="text-center p-4"><i class="fas fa-check-circle fa-3x text-success"></i><h4 class="mt-3">Congratulations!</h4><p class="text-white-50">No vulnerabilities were found during this scan.</p></div>');
+            container.html('<div class="text-center p-5"><i class="fas fa-check-circle fa-4x text-success mb-4" style="animation: fadeIn 1s ease-in-out;"></i><h4 class="mt-3 text-success">Congratulations!</h4><p class="text-white-50 mb-0">No vulnerabilities were found during this scan. The target appears to be secure.</p></div>');
             return;
         }
 
@@ -360,56 +614,167 @@ $(document).ready(function() {
         Object.entries(groupedFindings).forEach(([groupName, groupItems], index) => {
             const firstItem = groupItems[0];
             const severityClass = firstItem.severity.toLowerCase();
-            const groupId = `group-${index}`;
             const vulnerabilityInfo = vulnerabilityDB[groupName] || { title: groupName, what: 'No description available.', how: '', prevention: '' };
 
-            const groupHtml = `
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading-${groupId}">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${groupId}">
-                        <span class="badge bg-${severityClass} me-3">${firstItem.severity}</span>
-                        ${groupName}
-                        <span class="badge rounded-pill bg-secondary ms-auto me-2">${groupItems.length} found</span>
-                    </button>
-                </h2>
-                <div id="collapse-${groupId}" class="accordion-collapse collapse" data-bs-parent="#vulnerability-accordion">
-                    <div class="accordion-body">
-                        <div class="vuln-details">
-                            <h5><i class="fas fa-info-circle fa-fw text-primary"></i> What is ${vulnerabilityInfo.title}?</h5>
-                            <p class="text-white-50">${vulnerabilityInfo.what}</p>
-                            
-                            <h5><i class="fas fa-hammer fa-fw text-danger"></i> How It Works</h5>
-                            <p class="text-white-50">${vulnerabilityInfo.how}</p>
-
-                            <h5><i class="fas fa-shield-alt fa-fw text-success"></i> How to Prevent It</h5>
-                            <div class="text-white-50">${vulnerabilityInfo.prevention}</div>
+            // Create list item
+            const listItem = $(`
+                <div class="vuln-list-item" data-group-name="${groupName}" data-index="${index}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-${severityClass} me-2" title="Severity Level">${firstItem.severity}</span>
+                                <h6 class="mb-0" style="color: #e0e0e0;">${groupName}</h6>
+                                <span class="badge rounded-pill bg-secondary ms-2" title="Number of occurrences">${groupItems.length}</span>
+                            </div>
+                            ${firstItem.payload ? `<div class="text-white-50 mb-1" style="font-size: 0.8rem;"><i class="fas fa-crosshairs fa-fw"></i> Payload: <code>${firstItem.payload.substring(0, 40)}${firstItem.payload.length > 40 ? '...' : ''}</code></div>` : ''}
+                            <div class="text-white-50" style="font-size: 0.85rem;">
+                                <i class="fas fa-link fa-fw"></i> ${firstItem.url.substring(0, 60)}${firstItem.url.length > 60 ? '...' : ''}
+                            </div>
                         </div>
-                        <hr class="my-4">
-                        <h6 class="mb-3">Affected Locations:</h6>
-                        <div class="list-group list-group-flush">
-                            ${groupItems.map(item => `
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div class="flex-grow-1">
-                                            <p class="mb-1"><strong><i class="fas fa-link fa-fw"></i> URL:</strong> <code>${item.url}</code></p>
-                                            ${item.payload ? `<p class="mb-1"><strong><i class="fas fa-crosshairs fa-fw"></i> Payload:</strong> <code>${item.payload}</code></p>` : ''}
-                                            ${item.evidence ? `<p class="mb-1"><strong><i class="fas fa-microscope fa-fw"></i> Evidence:</strong> <code>${item.evidence}</code></p>` : ''}
-                                        </div>
-                                        <div class="vulnerability-scores ms-3">
-                                            ${item.cvss_score ? `<span class="badge bg-danger me-1" title="CVSS Score">CVSS ${item.cvss_score}</span>` : ''}
-                                            ${item.cwe ? `<span class="badge bg-secondary me-1" title="Common Weakness Enumeration">${item.cwe}</span>` : ''}
-                                            ${item.confidence ? `<span class="badge bg-info" title="Detection Confidence">${item.confidence}</span>` : ''}
-                                        </div>
-                                    </div>
-                                    <small class="text-white-50">${item.description}</small>
-                                </div>
-                            `).join('')}
+                        <div class="ms-3 text-center">
+                            ${firstItem.cvss_base_score ? `<div class="mb-1"><span class="badge bg-danger" title="Common Vulnerability Scoring System base score (0.0-10.0)">CVSS ${firstItem.cvss_base_score.toFixed(1)}</span></div>` : ''}
+                            ${firstItem.final_priority ? `<div class="mb-1"><span class="badge bg-${firstItem.final_priority === 'Critical' ? 'danger' : firstItem.final_priority === 'High' ? 'warning' : firstItem.final_priority === 'Medium' ? 'info' : 'secondary'}" title="Final computed priority considering CVSS, assets, and exploits">${firstItem.final_priority}</span></div>` : ''}
+                            ${typeof firstItem.confidence === 'number' ? `<div class="mb-1"><span class="badge bg-info" title="Detection confidence (0-100%)">${(firstItem.confidence * 100).toFixed(0)}%</span></div>` : ''}
+                            <i class="fas fa-chevron-right text-primary"></i>
                         </div>
                     </div>
                 </div>
-            </div>`;
-            container.append(groupHtml);
+            `);
+            
+            // Attach click handler
+            listItem.on('click', function() {
+                const groupName = $(this).data('group-name');
+                const index = $(this).data('index');
+                showVulnerabilityDetail(groupName, index, groupedFindings[groupName]);
+            });
+            
+            container.append(listItem);
         });
+
+        // Store the grouped findings globally for access in detail panel
+        window.groupedFindings = groupedFindings;
+    }
+
+    // Store current vulnerability index for navigation
+    let currentVulnIndex = 0;
+    let allVulnGroups = [];
+
+    function showVulnerabilityDetail(groupName, index, groupItems) {
+        const vulnerabilityInfo = vulnerabilityDB[groupName] || { title: groupName, what: 'No description available.', how: '', prevention: '' };
+        
+        // Store current index
+        currentVulnIndex = parseInt(index);
+        allVulnGroups = Object.keys(window.groupedFindings);
+        
+        // Remove active class from all items
+        $('.vuln-list-item').removeClass('active');
+        // Add active class to clicked item
+        $(`.vuln-list-item[data-index="${index}"]`).addClass('active');
+
+        // Check if we're in full mode
+        const isFullMode = $('#detail-panel').hasClass('full-mode');
+        
+        // Show detail panel
+        $('#detail-panel').addClass('active');
+        
+        // Handle list panel state based on mode
+        if (isFullMode) {
+            // In full mode, keep list hidden
+            $('#list-panel').removeClass('split-mode').addClass('hidden');
+        } else {
+            // In split mode, show list
+            $('#list-panel').addClass('split-mode').removeClass('hidden');
+        }
+        
+        // Show navigation buttons
+        updateNavButtons();
+
+        // Populate detail content - escape HTML safely
+        const severity = groupItems[0].severity.toLowerCase();
+        const title = vulnerabilityInfo.title || groupName;
+        
+        const detailContent = `
+                        <div class="vuln-details">
+                <h4 style="color: #e0e0e0; margin-bottom: 20px;">
+                    <span class="badge bg-${severity} me-2">${groupItems[0].severity}</span>
+                    ${title}
+                </h4>
+                
+                <div class="mb-4">
+                    <h5 style="color: #e0e0e0;"><i class="fas fa-info-circle fa-fw text-primary"></i> ${vulnerabilityInfo.title}</h5>
+                            <p class="text-white-50">${vulnerabilityInfo.what}</p>
+                </div>
+                            
+                <div class="mb-4">
+                    <h5 style="color: #e0e0e0;"><i class="fas fa-hammer fa-fw text-danger"></i> How It Works</h5>
+                            <p class="text-white-50">${vulnerabilityInfo.how}</p>
+                </div>
+
+                <div class="mb-4">
+                    <h5 style="color: #e0e0e0;"><i class="fas fa-shield-alt fa-fw text-success"></i> How to Prevent It</h5>
+                            <div class="text-white-50">${vulnerabilityInfo.prevention}</div>
+                        </div>
+
+                <hr style="border-color: var(--border-color); opacity: 0.3; margin: 30px 0;">
+                
+                <h5 style="color: #e0e0e0; margin-bottom: 15px;"><i class="fas fa-map-marker-alt fa-fw"></i> Affected Locations (${groupItems.length})</h5>
+                <div style="max-height: 400px; overflow-y: auto;">
+                            ${groupItems.map(item => `
+                        <div style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 12px;">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="flex-grow-1">
+                                    <div class="mb-2">
+                                        <strong style="color: #e0e0e0; display: block; margin-bottom: 5px;"><i class="fas fa-link fa-fw"></i> URL:</strong>
+                                        <code style="font-size: 0.85rem; word-break: break-all;">${item.url}</code>
+                                        </div>
+                                    ${item.payload ? `
+                                    <div class="mb-2">
+                                        <strong style="color: #e0e0e0; display: block; margin-bottom: 5px;" title="The exact malicious input that triggers this vulnerability"><i class="fas fa-crosshairs fa-fw"></i> Payload Used:</strong>
+                                        <div class="payload-display">
+                                            <code style="font-size: 0.9rem; color: #ff6b6b; background: transparent;">${item.payload}</code>
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                    ${item.evidence ? `
+                                    <div class="mb-2">
+                                        <strong style="color: #e0e0e0; display: block; margin-bottom: 5px;" title="Evidence that confirmed this vulnerability"><i class="fas fa-microscope fa-fw"></i> Evidence:</strong>
+                                        <code style="font-size: 0.85rem;">${item.evidence}</code>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                <div class="ms-3">
+                                    ${item.cvss_base_score ? `<div class="mb-2"><span class="badge bg-danger" style="display: block; padding: 8px 12px; min-width: 80px;" title="CVSS Base Score: ${item.cvss_base_score.toFixed(1)} out of 10.0 (Higher = more severe)">CVSS ${item.cvss_base_score.toFixed(1)}</span></div>` : ''}
+                                    ${item.final_priority ? `<div class="mb-2"><span class="badge bg-${item.final_priority === 'Critical' ? 'danger' : item.final_priority === 'High' ? 'warning' : item.final_priority === 'Medium' ? 'info' : 'secondary'}" style="display: block; padding: 8px 12px; min-width: 80px;" title="Priority: ${item.final_priority}. Combines CVSS score, asset criticality, exploit availability, and confidence">${item.final_priority}</span></div>` : ''}
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                ${item.occurrences > 1 ? `<div class="col-auto"><span class="badge bg-warning" title="Found by ${item.occurrences} different scanners - higher confidence"><i class="fas fa-layer-group fa-fw"></i> ${item.occurrences}x</span></div>` : ''}
+                                ${item.asset_criticality ? `<div class="col-auto"><span class="badge bg-${item.asset_criticality >= 8 ? 'danger' : item.asset_criticality >= 6 ? 'warning' : 'secondary'}" title="Asset Criticality: ${item.asset_criticality}/10. How critical is this server/endpoint"><i class="fas fa-server fa-fw"></i> ${item.asset_criticality}/10</span></div>` : ''}
+                                ${item.exploit_published ? `<div class="col-auto"><span class="badge bg-danger" title="Active exploit available in the wild"><i class="fas fa-bug fa-fw"></i> Exploit</span></div>` : ''}
+                                ${typeof item.confidence === 'number' ? `<div class="col-auto"><span class="badge bg-info" title="Detection Confidence: ${(item.confidence * 100).toFixed(0)}% certain this is a real vulnerability"><i class="fas fa-check-circle fa-fw"></i> ${(item.confidence * 100).toFixed(0)}%</span></div>` : ''}
+                                ${item.cwe ? `<div class="col-auto"><span class="badge bg-secondary" title="Common Weakness Enumeration: ${item.cwe}"><i class="fas fa-code fa-fw"></i> ${item.cwe}</span></div>` : ''}
+                            </div>
+                            ${(item.impact_score && item.exploitability_score) ? `
+                            <div class="mt-2 p-3" style="background: rgba(0, 0, 0, 0.3); border-radius: 6px; border-left: 3px solid var(--primary-accent);">
+                                <small class="text-white-50 d-block mb-2" style="font-weight: 600;"><i class="fas fa-chart-line fa-fw"></i> CVSS Breakdown:</small>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <small class="text-success d-block" title="Impact Score: How much damage can be caused">Impact: <strong>${item.impact_score.toFixed(1)}</strong></small>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-warning d-block" title="Exploitability Score: How easy it is to exploit">Exploitability: <strong>${item.exploitability_score.toFixed(1)}</strong></small>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            <p class="text-white-50 mt-3 mb-0" style="font-size: 0.9rem;">${item.description}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        $('#detail-content').html(detailContent);
     }
     
     function downloadReport(filename) {
@@ -427,6 +792,72 @@ $(document).ready(function() {
         $('#start-scan .btn-text').html('<i class="fas fa-search fa-fw"></i> Start Scan');
         $('#start-scan').prop('disabled', false);
     }
+
+    function updateNavButtons() {
+        const prevBtn = $('#prev-vuln');
+        const nextBtn = $('#next-vuln');
+        const isFullMode = $('#detail-panel').hasClass('full-mode');
+        
+        // Show navigation buttons only in full mode
+        if (isFullMode) {
+            if (currentVulnIndex > 0) {
+                prevBtn.show();
+            } else {
+                prevBtn.hide();
+            }
+            
+            if (currentVulnIndex < allVulnGroups.length - 1) {
+                nextBtn.show();
+            } else {
+                nextBtn.hide();
+            }
+        } else {
+            // Hide buttons in split mode
+            prevBtn.hide();
+            nextBtn.hide();
+        }
+    }
+
+    window.navigateVuln = function(direction) {
+        const newIndex = currentVulnIndex + direction;
+        if (newIndex >= 0 && newIndex < allVulnGroups.length) {
+            const groupName = allVulnGroups[newIndex];
+            const groupItems = window.groupedFindings[groupName];
+            
+            // Update active item in list
+            $('.vuln-list-item').removeClass('active');
+            $(`.vuln-list-item[data-index="${newIndex}"]`).addClass('active');
+            
+            // Show the detail for this vulnerability (preserves full mode state)
+            showVulnerabilityDetail(groupName, newIndex, groupItems);
+        }
+    };
+
+    window.toggleExpandMinimize = function() {
+        const $detailPanel = $('#detail-panel');
+        const $listPanel = $('#list-panel');
+        const $btn = $('#expand-minimize-btn');
+        const $icon = $btn.find('i');
+        
+        if ($detailPanel.hasClass('full-mode')) {
+            // Minimize - return to split view
+            $detailPanel.removeClass('full-mode');
+            $listPanel.removeClass('hidden').addClass('split-mode');
+            $icon.removeClass('fa-compress').addClass('fa-expand');
+            $btn.attr('title', 'Expand');
+        } else {
+            // Expand - go to full view
+            $detailPanel.addClass('full-mode');
+            $listPanel.addClass('hidden').removeClass('split-mode');
+            $icon.removeClass('fa-expand').addClass('fa-compress');
+            $btn.attr('title', 'Minimize');
+        }
+        
+        // Force a reflow to ensure CSS transition works
+        $detailPanel[0].offsetHeight;
+        
+        updateNavButtons();
+    };
 });
 </script>
 {% endblock %}

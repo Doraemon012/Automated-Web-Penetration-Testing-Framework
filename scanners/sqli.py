@@ -67,8 +67,15 @@ SQL_ERROR_PATTERNS = [
     r"num_rows", r"mysql_num_rows", r"mysql_fetch_array"
 ]
 
-def test_sqli(url, forms, session=None):
-    """Enhanced SQL injection testing with multiple detection methods"""
+def test_sqli(url, forms, session=None, mode='standard'):
+    """Enhanced SQL injection testing with multiple detection methods
+    
+    Args:
+        url: Target URL
+        forms: List of forms to test
+        session: Requests session
+        mode: Scan mode - 'safe' skips time-based checks, 'standard'/'aggressive' runs all
+    """
     issues = []
     
     for form in forms:
@@ -76,19 +83,21 @@ def test_sqli(url, forms, session=None):
         
         for inp in form["inputs"]:
             if inp["name"]:
-                # Test error-based SQLi
+                # Test error-based SQLi (fast)
                 error_findings = test_error_based_sqli(target_url, form, inp, session)
                 issues.extend(error_findings)
                 
-                # Test time-based blind SQLi
-                time_findings = test_time_based_sqli(target_url, form, inp, session)
-                issues.extend(time_findings)
+                # Test time-based blind SQLi (slow - 5+ seconds per payload)
+                # Skip in safe mode due to slowness
+                if mode != 'safe':
+                    time_findings = test_time_based_sqli(target_url, form, inp, session)
+                    issues.extend(time_findings)
                 
-                # Test boolean-based blind SQLi
+                # Test boolean-based blind SQLi (fast)
                 boolean_findings = test_boolean_based_sqli(target_url, form, inp, session)
                 issues.extend(boolean_findings)
 
-                # Test union-based SQLi
+                # Test union-based SQLi (fast)
                 union_findings = test_union_based_sqli(target_url, form, inp, session)
                 issues.extend(union_findings)
     
