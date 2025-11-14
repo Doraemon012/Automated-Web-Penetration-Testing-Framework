@@ -698,6 +698,14 @@ SUCCESS_INDICATORS = ['dashboard', 'profile', 'logout', 'welcome']
 FAILURE_INDICATORS = ['error', 'invalid', 'incorrect', 'failed']
 ```
 
+### API Environment Variables
+- Copy `.env.example` to `.env` and adjust values before starting the FastAPI service (`uvicorn api_server:app`).
+- `WEBPENTEST_API_KEY`: shared secret clients must supply via the `X-API-Key` header; leave unset to disable auth during local development.
+- `API_ALLOWED_ORIGINS`: comma-separated origins for CORS (use explicit origins in production; `*` only for quick tests).
+- `API_MAX_WORKERS`: limit concurrent background scans; keep low on small Render plans to avoid timeouts.
+- `REPORTS_DIR`: filesystem path for generated `report_*.json`/`report_*.md` artefacts; defaults to `reports`.
+- `API_LOG_LEVEL` and `PORT`: tune logging verbosity and the port used by Uvicorn.
+
 ## 📊 Enhanced Reports
 
 ### JSON Report Structure
