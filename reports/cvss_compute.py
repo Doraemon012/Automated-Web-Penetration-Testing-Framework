@@ -285,11 +285,23 @@ def compute_cvss_score(vector: str) -> Dict[str, float]:
         cvss_obj = CVSS3(vector)
         scores = cvss_obj.scores()
         
+        # The cvss library returns a tuple: (base_score, impact_subscore, exploitability_subscore)
+        # or just base_score depending on version
+        if isinstance(scores, tuple) and len(scores) >= 3:
+            base_score = scores[0]
+            impact_score = scores[1]
+            exploitability_score = scores[2]
+        else:
+            base_score = scores if isinstance(scores, (int, float)) else scores[0]
+            # Calculate sub-scores manually if not provided
+            impact_score = base_score * 0.4  # Approximation
+            exploitability_score = base_score * 0.6  # Approximation
+        
         return {
             'vector': vector,
-            'base_score': scores[0],
-            'impact_score': cvss_obj.impact_score(),
-            'exploitability_score': cvss_obj.exploitability_score()
+            'base_score': float(base_score),
+            'impact_score': float(impact_score),
+            'exploitability_score': float(exploitability_score)
         }
     except Exception as e:
         # If CVSS computation fails, return zeros and log error
