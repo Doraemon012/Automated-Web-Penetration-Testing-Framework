@@ -186,8 +186,15 @@
 
 import sys
 import argparse
+import asyncio
 from crawler.crawler import Crawler
-# from crawler.js_crawler import JSCrawler, PLAYWRIGHT_AVAILABLE
+try:
+    from crawler.js_crawler import JSCrawler  # Playwright-based crawler
+    PLAYWRIGHT_AVAILABLE = True
+except Exception:
+    # If playwright or its dependencies are not installed/usable
+    PLAYWRIGHT_AVAILABLE = False
+    JSCrawler = None
 from utils.helpers import normalize_url, is_site_up
 from utils.session_manager import SessionManager
 from scanners.headers import check_security_headers
@@ -239,10 +246,6 @@ def run_complete_scan(target_url, auth_config=None, use_js=False, mode="standard
         if not success:
             print("[-] Authentication failed, continuing with unauthenticated scan")
     
-    # Choose crawler based on JS support requirement
-    if use_js:
-        print("[-] Playwright not available, using regular crawler")
-    
     # Adjust crawl scope based on mode
     if mode == "ultra-safe":
         max_depth = 1
@@ -251,9 +254,17 @@ def run_complete_scan(target_url, auth_config=None, use_js=False, mode="standard
         max_depth = 1
     else:
         max_depth = 2
-    
-    crawler = Crawler(target, max_depth=max_depth, session_manager=session_manager)
-    crawler.crawl()
+
+    # Choose crawler based on JS support requirement & availability
+    if use_js and PLAYWRIGHT_AVAILABLE:
+        print("[+] Using JavaScript-enabled crawler (Playwright)")
+        crawler = JSCrawler(target, max_depth=max_depth, session_manager=session_manager)
+        asyncio.run(crawler.run_crawl())
+    else:
+        if use_js and not PLAYWRIGHT_AVAILABLE:
+            print("[-] Playwright not available, falling back to regular crawler")
+        crawler = Crawler(target, max_depth=max_depth, session_manager=session_manager)
+        crawler.crawl()
     
     crawler.save_results()
     
