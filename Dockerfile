@@ -1,5 +1,5 @@
 # Official Playwright image with Python + all browsers preinstalled
-FROM mcr.microsoft.com/playwright:v1.56.0-jammy
+FROM playwright/python:v1.56.0
 
 # Avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
@@ -12,7 +12,8 @@ COPY . .
 
 # Install Python dependencies
 RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
+    && pip install -r requirements.txt \
+    && playwright install --with-deps
 
 # Expose port (Render uses PORT env)
 EXPOSE 10000
