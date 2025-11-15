@@ -169,3 +169,8 @@ test_*.py
 # Temporary files
 *.tmp
 *.temp
+
+# Extension tooling artifacts
+extension/node_modules/
+extension/.vite/
+extension/dist/

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Web Pentest Companion — Settings</title>
+    <link rel="stylesheet" href="styles/tailwind.css" />
+  </head>
+  <body class="bg-slate-950 text-slate-100 min-h-screen">
+    <main class="max-w-3xl mx-auto py-10 space-y-8">
+      <header>
+        <h1 class="text-2xl font-semibold">Extension Settings</h1>
+        <p class="text-slate-400 text-sm">Configure API access, defaults, and scheduling.</p>
+      </header>
+
+      <section class="card">
+        <h2 class="card-title">API Connection</h2>
+        <form id="settingsForm" class="space-y-4">
+          <label class="form-field">
+            <span>API Base URL</span>
+            <input type="url" name="apiBaseUrl" class="input" placeholder="https://scanner.yourdomain.com" required />
+          </label>
+          <label class="form-field">
+            <span>Default Mode</span>
+            <select name="defaultMode" class="input">
+              <option value="ultra-safe">Ultra Safe</option>
+              <option value="safe">Safe</option>
+              <option value="standard">Standard</option>
+              <option value="aggressive">Aggressive</option>
+            </select>
+          </label>
+          <label class="form-field-inline">
+            <div>
+              <span>JS Crawler</span>
+              <p>Enable Playwright crawler by default.</p>
+            </div>
+            <input type="checkbox" name="useJsCrawler" class="toggle" />
+          </label>
+          <label class="form-field">
+            <span>Polling Interval (ms)</span>
+            <input type="number" name="pollingIntervalMs" class="input" min="2000" step="1000" />
+          </label>
+          <label class="form-field-inline">
+            <div>
+              <span>Passive Checks</span>
+              <p>Run lightweight header/DOM lint before sending to API.</p>
+            </div>
+            <input type="checkbox" name="passiveChecksEnabled" class="toggle" />
+          </label>
+          <div class="flex space-x-2">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" id="testConnection" class="btn btn-muted">Test Connection</button>
+          </div>
+          <p id="settingsStatus" class="text-sm text-slate-400"></p>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">Schedules (Local)</h2>
+        <p class="text-sm text-slate-400">
+          Define domains to monitor automatically. The service worker will trigger scans when the schedule fires. These are stored locally and never leave your browser.
+        </p>
+        <form id="scheduleForm" class="space-y-3">
+          <div class="grid md:grid-cols-3 gap-3">
+            <input type="url" name="target" placeholder="https://example.com" class="input" required />
+            <select name="frequency" class="input">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+            <button class="btn btn-primary">Add Schedule</button>
+          </div>
+        </form>
+        <ul id="scheduleList" class="mt-4 space-y-2 text-sm"></ul>
+      </section>
+    </main>
+
+    <template id="scheduleItemTemplate">
+      <li class="flex items-center justify-between p-3 rounded border border-slate-800">
+        <div>
+          <p class="font-medium text-slate-100 data-target"></p>
+          <p class="text-slate-400 text-xs data-frequency"></p>
+        </div>
+        <button class="text-rose-400 text-xs data-remove">Remove</button>
+      </li>
+    </template>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

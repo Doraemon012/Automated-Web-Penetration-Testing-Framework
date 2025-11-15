@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Pentest Companion</title>
+    <link rel="stylesheet" href="styles/tailwind.css" />
+  </head>
+  <body class="bg-slate-900 text-slate-100 w-96 p-4 space-y-4">
+    <header class="flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-slate-400">Web Pentest</p>
+        <h1 class="text-lg font-semibold">Companion</h1>
+      </div>
+      <button id="openOptions" class="text-xs text-cyan-400 hover:text-cyan-200">Settings</button>
+    </header>
+
+    <section id="authSection" class="bg-slate-800 rounded-xl p-3 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold">Authentication</h2>
+        <span id="authStatus" class="text-xs text-slate-400">Signed out</span>
+      </div>
+      <form id="authForm" class="space-y-2">
+        <input type="email" name="email" placeholder="Email" required class="input" />
+        <input type="password" name="password" placeholder="Password" required class="input" />
+        <div class="flex space-x-2">
+          <button type="submit" class="btn btn-primary flex-1">Sign In</button>
+          <button type="button" id="registerBtn" class="btn btn-muted">Register</button>
+        </div>
+      </form>
+      <button id="logoutBtn" class="btn btn-danger hidden">Sign Out</button>
+    </section>
+
+    <section id="scanSection" class="bg-slate-800 rounded-xl p-3 space-y-3 opacity-50 pointer-events-none">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold">Quick Scan</h2>
+        <span id="currentUrl" class="text-xs text-slate-400 truncate">...</span>
+      </div>
+      <form id="scanForm" class="space-y-2">
+        <div class="space-y-1">
+          <label class="text-xs text-slate-400">Target URL</label>
+          <input type="url" name="target" class="input" required />
+        </div>
+        <div class="flex space-x-2">
+          <label class="flex-1 text-xs text-slate-400">
+            Mode
+            <select name="mode" class="input">
+              <option value="ultra-safe">Ultra Safe</option>
+              <option value="safe">Safe</option>
+              <option value="standard" selected>Standard</option>
+              <option value="aggressive">Aggressive</option>
+            </select>
+          </label>
+          <label class="flex items-center text-xs text-slate-300 space-x-2">
+            <input type="checkbox" name="useJs" class="toggle" />
+            <span>JS Crawler</span>
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Start Scan</button>
+      </form>
+      <div id="scanStatus" class="text-xs text-slate-400"></div>
+    </section>
+
+    <section class="bg-slate-800 rounded-xl p-3 space-y-2">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold">Recent Scans</h2>
+        <button id="refreshHistory" class="text-xs text-cyan-400">Refresh</button>
+      </div>
+      <ul id="historyList" class="space-y-2 text-xs text-slate-300"></ul>
+    </section>
+
+    <section id="resultSection" class="bg-slate-800 rounded-xl p-3 space-y-2 hidden">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold">Latest Result</h2>
+        <button id="downloadReport" class="text-xs text-cyan-400">Download JSON</button>
+      </div>
+      <div id="resultSummary" class="text-xs text-slate-300 space-y-1"></div>
+      <div class="space-y-1">
+        <h3 class="text-xs uppercase tracking-wide text-slate-400">Severity</h3>
+        <div id="severityBadges" class="flex flex-wrap gap-2"></div>
+      </div>
+    </section>
+
+    <template id="historyItemTemplate">
+      <li class="p-2 rounded border border-slate-700 flex flex-col space-y-1">
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-slate-100 truncate data-target"></span>
+          <span class="text-[10px] uppercase tracking-widest data-status"></span>
+        </div>
+        <div class="text-[11px] text-slate-400 flex items-center justify-between">
+          <span class="data-mode"></span>
+          <button class="text-cyan-300 hover:text-cyan-100 data-view">View</button>
+        </div>
+      </li>
+    </template>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

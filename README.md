@@ -52,6 +52,7 @@ A comprehensive, advanced web security scanner that identifies vulnerabilities t
 - **Modern Web Interface**: Real-time scanning with progress tracking
 - **API Endpoints**: RESTful API for programmatic access
 - **Scan History Management**: Persistent storage and retrieval of scan results
+- **Browser Extension (MV3)**: Launch scans, monitor history, and overlay findings directly inside Chrome/Edge — see `extension/README.md` for setup details.
 
 ## 🆕 What's New in This Version
 
