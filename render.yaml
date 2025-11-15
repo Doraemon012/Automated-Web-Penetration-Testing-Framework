@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: vanguard
+    env: docker
+    plan: starter
+    autoDeploy: true
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    healthCheckPath: /api/status/health
+    envVars:
+      - key: WEBPENTEST_API_KEY
+        sync: false
+      - key: API_ALLOWED_ORIGINS
+        sync: false
+      - key: API_MAX_WORKERS
+        sync: false
+      - key: API_LOG_LEVEL
+        sync: false
+      - key: REPORTS_DIR
+        sync: false
+      - key: PORT
+        sync: false
