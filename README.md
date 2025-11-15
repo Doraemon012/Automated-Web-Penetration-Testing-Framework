@@ -705,6 +705,47 @@ FAILURE_INDICATORS = ['error', 'invalid', 'incorrect', 'failed']
 - `API_MAX_WORKERS`: limit concurrent background scans; keep low on small Render plans to avoid timeouts.
 - `REPORTS_DIR`: filesystem path for generated `report_*.json`/`report_*.md` artefacts; defaults to `reports`.
 - `API_LOG_LEVEL` and `PORT`: tune logging verbosity and the port used by Uvicorn.
+- `JWT_SECRET_KEY`, `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`, `JWT_ALGORITHM`: control email/password JWT issuance; never ship the default secret to production.
+
+### MongoDB Persistence (Optional)
+Enabling MongoDB allows scan history, status, and results to survive API restarts and power the `/api/scans` listing endpoint.
+
+1. Provision a MongoDB instance (local Docker, Atlas, etc.).
+2. Set the following variables in `.env`:
+  - `MONGO_URI`: full connection string, e.g. `mongodb://user:pass@localhost:27017`.
+  - `MONGO_DB_NAME`: database to store scan metadata (default: `webpentest`).
+  - `MONGO_SCANS_COLLECTION`: collection name for scan documents (default: `scans`).
+3. Restart the API service. On boot the server will validate connectivity and create indexes.
+
+When enabled, every scan transition (queued → running → completed/failed) is written to MongoDB together with report locations. Clients can fetch:
+
+- `GET /api/scans`: paginated scan history (newest first, default limit 20, max 100).
+- `GET /api/status/{scan_id}`: returns live data and falls back to MongoDB if the job no longer exists in memory.
+- `GET /api/results/{scan_id}` and `/api/reports/{scan_id}/{type}`: served from MongoDB records even after restarts.
+
+### Email/Password Authentication
+MongoDB is also used to store user accounts so first-party tools (browser extensions, dashboards) can log in with email + password instead of hard-coded API keys.
+
+1. Ensure the Mongo variables above are configured; the API auto-creates a `users` collection.
+2. Register a user:
+  ```bash
+  curl -X POST http://localhost:8000/api/auth/register \
+      -H "Content-Type: application/json" \
+      -d '{"email":"you@example.com","password":"SuperSecret123"}'
+  ```
+3. Log in to receive a JWT:
+  ```bash
+  TOKEN=$(curl -s -X POST http://localhost:8000/api/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"email":"you@example.com","password":"SuperSecret123"}' \
+      | jq -r '.access_token')
+  ```
+4. Use the token when calling protected endpoints:
+  ```bash
+  curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/scans
+  ```
+
+All scanning endpoints (`/api/scan`, `/api/status`, `/api/results`, `/api/reports`, `/api/scans`) now require either a valid `X-API-Key` or a Bearer token obtained from the login flow.
 
 ## 📊 Enhanced Reports
 

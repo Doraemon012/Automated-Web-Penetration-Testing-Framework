@@ -8,20 +8,24 @@ import logging
 import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, Header, status
+from fastapi import Depends, FastAPI, HTTPException, Header, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field, HttpUrl, root_validator
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, root_validator
 
 from main import run_complete_scan
 from reports.cvss_compute import enhance_finding_with_cvss, deduplicate_findings
 from reports.reporter import Reporter
 from reports.risk import enrich_findings
+from db.mongo_repository import ScanRepository
+from db.user_repository import UserRepository
 
 
 def _resolve_log_level() -> int | str:
@@ -45,6 +49,39 @@ ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv("API_ALLOWED_ORIGINS",
 MAX_WORKERS = int(os.getenv("API_MAX_WORKERS", "2"))
 REPORTS_DIR = Path(os.getenv("REPORTS_DIR", "reports")).resolve()
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "webpentest")
+MONGO_SCAN_COLLECTION = os.getenv("MONGO_SCANS_COLLECTION", "scans")
+MONGO_USERS_COLLECTION = os.getenv("MONGO_USERS_COLLECTION", "users")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+
+password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+SCAN_REPOSITORY: Optional[ScanRepository] = None
+USER_REPOSITORY: Optional[UserRepository] = None
+if MONGO_URI and MONGO_DB_NAME:
+    try:
+        SCAN_REPOSITORY = ScanRepository(MONGO_URI, MONGO_DB_NAME, MONGO_SCAN_COLLECTION)
+        logger.info(
+            "MongoDB scan persistence enabled (db=%s, collection=%s)",
+            MONGO_DB_NAME,
+            MONGO_SCAN_COLLECTION,
+        )
+    except Exception as exc:  # pragma: no cover - startup failure path
+        logger.error("Failed to initialize MongoDB scan repository: %s", exc)
+    try:
+        USER_REPOSITORY = UserRepository(MONGO_URI, MONGO_DB_NAME, MONGO_USERS_COLLECTION)
+        logger.info(
+            "MongoDB user repository enabled (db=%s, collection=%s)",
+            MONGO_DB_NAME,
+            MONGO_USERS_COLLECTION,
+        )
+    except Exception as exc:  # pragma: no cover - startup failure path
+        logger.error("Failed to initialize MongoDB user repository: %s", exc)
+else:
+    logger.info("MongoDB persistence disabled (missing configuration)")
 SERVICE_STARTED_AT = datetime.utcnow()
 
 # ---------------------------------------------------------------------------
@@ -127,6 +164,21 @@ class ScanRequest(BaseModel):
         if mode not in allowed:
             raise ValueError(f"Invalid mode '{mode}'. Allowed values: {', '.join(sorted(allowed))}.")
         return values
+
+
+class AuthRegisterRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=128)
+
+
+class AuthLoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=128)
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
 
 
 class ScanResultSummary(BaseModel):
@@ -244,10 +296,11 @@ class ScanJob:
 class ScanManager:
     """Manages scan job lifecycle and execution."""
 
-    def __init__(self, max_workers: int = 2):
+    def __init__(self, max_workers: int = 2, repository: Optional[ScanRepository] = None):
         self._jobs: Dict[str, ScanJob] = {}
         self._executor = ThreadPoolExecutor(max_workers=max_workers)
         self._manager_lock = threading.Lock()
+        self._repository = repository
 
     def create_job(self, target_url: str, mode: str, use_js: bool, auth_config: Optional[Dict[str, Any]]) -> ScanJob:
         job = ScanJob(target_url=target_url, mode=mode, use_js=use_js, auth_config=auth_config)
@@ -255,6 +308,7 @@ class ScanManager:
             self._jobs[job.id] = job
         self._executor.submit(self._run_job, job)
         logger.info("Enqueued scan job %s for %s", job.id, target_url)
+        self._persist_job(job)
         return job
 
     def get_job(self, job_id: str) -> ScanJob:
@@ -263,13 +317,46 @@ class ScanManager:
                 raise KeyError(job_id)
             return self._jobs[job_id]
 
+    def get_snapshot(self, job_id: str) -> Dict[str, Any]:
+        job = self._get_job_if_present(job_id)
+        if job:
+            return job.snapshot()
+
+        snapshot = self._load_snapshot_from_repository(job_id)
+        if snapshot:
+            return snapshot
+        raise KeyError(job_id)
+
+    def get_result_document(self, job_id: str) -> Dict[str, Any]:
+        job = self._get_job_if_present(job_id)
+        if job and job.result:
+            return job.snapshot_result()
+
+        if self._repository:
+            document = self._repository.get_scan(job_id)
+            if document and document.get("result_full"):
+                return document["result_full"]
+
+        raise KeyError(job_id)
+
+    def list_snapshots(self, limit: int = 20) -> List[Dict[str, Any]]:
+        if self._repository:
+            documents = self._repository.list_scans(limit)
+            return [self._document_to_snapshot(doc) for doc in documents]
+
+        with self._manager_lock:
+            jobs = sorted(self._jobs.values(), key=lambda job: job.created_at, reverse=True)
+            return [job.snapshot() for job in jobs[:limit]]
+
     def _run_job(self, job: ScanJob) -> None:
         logger.info("Starting scan job %s", job.id)
         job.update(status="running", progress=5, message="Normalizing target URL", started_at=datetime.utcnow())
+        self._persist_job(job)
 
         try:
             normalized_target = str(job.target_url)
             job.update(progress=10, message="Launching scanner")
+            self._persist_job(job)
 
             findings = run_complete_scan(
                 normalized_target,
@@ -283,8 +370,10 @@ class ScanManager:
             enriched = deduplicate_findings(enriched)
             enriched = enrich_findings(enriched)
             sanitized = _sanitize_findings(enriched)
+            self._persist_job(job)
 
             job.update(progress=85, message="Generating reports")
+            self._persist_job(job)
             result_payload = _build_result_payload(job, sanitized)
 
             reporter = Reporter()
@@ -300,9 +389,11 @@ class ScanManager:
                 result=result_payload,
             )
             logger.info("Scan job %s completed", job.id)
+            self._persist_job(job)
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception("Scan job %s failed", job.id)
             job.update(status="failed", progress=100, message="Scan failed", error=str(exc))
+            self._persist_job(job)
 
     def shutdown(self) -> None:
         self._executor.shutdown(wait=False)
@@ -313,6 +404,56 @@ class ScanManager:
             running = sum(1 for job in self._jobs.values() if job.status == "running")
             queued = sum(1 for job in self._jobs.values() if job.status == "queued")
         return {"total": total, "running": running, "queued": queued}
+
+    def _persist_job(self, job: ScanJob) -> None:
+        if not self._repository:
+            return
+
+        snapshot = job.snapshot()
+        document: Dict[str, Any] = dict(snapshot)
+        document["auth_config"] = job.auth_config
+        if job.result:
+            try:
+                document["result_full"] = job.snapshot_result()
+            except ValueError:
+                document["result_full"] = None
+        else:
+            document["result_full"] = None
+        self._repository.upsert(document)
+
+    def _get_job_if_present(self, job_id: str) -> Optional[ScanJob]:
+        with self._manager_lock:
+            return self._jobs.get(job_id)
+
+    def _load_snapshot_from_repository(self, job_id: str) -> Optional[Dict[str, Any]]:
+        if not self._repository:
+            return None
+        document = self._repository.get_scan(job_id)
+        if not document:
+            return None
+        return self._document_to_snapshot(document)
+
+    @staticmethod
+    def _document_to_snapshot(document: Dict[str, Any]) -> Dict[str, Any]:
+        keys = [
+            "scan_id",
+            "status",
+            "progress",
+            "message",
+            "created_at",
+            "updated_at",
+            "started_at",
+            "completed_at",
+            "target_url",
+            "mode",
+            "use_js",
+            "result",
+            "error",
+        ]
+        snapshot = {key: document.get(key) for key in keys}
+        if "result" not in snapshot:
+            snapshot["result"] = None
+        return snapshot
 
 
 # ---------------------------------------------------------------------------
@@ -332,6 +473,44 @@ def _sanitize_findings(findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         data.setdefault("evidence", "")
         sanitized.append(data)
     return sanitized
+
+
+def _hash_password(password: str) -> str:
+    return password_context.hash(password)
+
+
+def _verify_password(password: str, hashed: str) -> bool:
+    try:
+        return password_context.verify(password, hashed)
+    except ValueError:
+        return False
+
+
+def _create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRE_MINUTES))
+    payload = {"sub": subject, "exp": expire}
+    return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+
+def _decode_access_token(token: str) -> str:
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+    except JWTError as exc:  # pragma: no cover - crypto edge cases
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid bearer token") from exc
+
+    subject = payload.get("sub")
+    if not subject:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid bearer token")
+    return subject
+
+
+def _require_user_repository() -> UserRepository:
+    if not USER_REPOSITORY:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="User repository not configured",
+        )
+    return USER_REPOSITORY
 
 
 def _build_result_payload(job: ScanJob, findings: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -361,9 +540,20 @@ def _build_result_payload(job: ScanJob, findings: List[Dict[str, Any]]) -> Dict[
     }
 
 
-def _require_api_key(x_api_key: Optional[str] = Header(default=None)) -> None:
-    if API_AUTH_TOKEN and x_api_key != API_AUTH_TOKEN:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing API key")
+def _require_authorized_client(
+    x_api_key: Optional[str] = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
+) -> None:
+    if API_AUTH_TOKEN and x_api_key == API_AUTH_TOKEN:
+        return
+
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+        if token:
+            _decode_access_token(token)
+            return
+
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing credentials")
 
 
 def _relative_report_path(path_str: str) -> str:
@@ -389,7 +579,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-scan_manager = ScanManager(max_workers=MAX_WORKERS)
+scan_manager = ScanManager(max_workers=MAX_WORKERS, repository=SCAN_REPOSITORY)
 
 
 @app.on_event("shutdown")
@@ -410,8 +600,46 @@ async def health_check() -> Dict[str, Any]:
     }
 
 
+@app.post("/api/auth/register")
+async def register_user(payload: AuthRegisterRequest) -> Dict[str, str]:
+    repo = _require_user_repository()
+    if repo.email_exists(payload.email):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+
+    hashed_password = _hash_password(payload.password)
+    repo.create_user(payload.email, hashed_password)
+    return {"message": "Registration successful"}
+
+
+@app.post("/api/auth/login", response_model=TokenResponse)
+async def login_user(payload: AuthLoginRequest) -> TokenResponse:
+    repo = _require_user_repository()
+    user = repo.get_user_by_email(payload.email)
+    if not user or not _verify_password(payload.password, user.get("hashed_password", "")):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+    token = _create_access_token(user["email"])
+    return TokenResponse(access_token=token)
+
+
+@app.get("/api/scans", response_model=List[ScanStatusResponse])
+async def list_scans(limit: int = Query(20, ge=1, le=100), _: None = Depends(_require_authorized_client)) -> List[ScanStatusResponse]:
+    snapshots = scan_manager.list_snapshots(limit)
+    responses: List[ScanStatusResponse] = []
+    for snapshot in snapshots:
+        snapshot_copy = dict(snapshot)
+        raw_result = snapshot_copy.pop("result", None)
+        responses.append(
+            ScanStatusResponse(
+                **snapshot_copy,
+                result=_build_summary(raw_result),
+            )
+        )
+    return responses
+
+
 @app.post("/api/scan", response_model=ScanStatusResponse, status_code=status.HTTP_202_ACCEPTED)
-async def create_scan(request: ScanRequest, _: None = Depends(_require_api_key)) -> ScanStatusResponse:
+async def create_scan(request: ScanRequest, _: None = Depends(_require_authorized_client)) -> ScanStatusResponse:
     auth_config = request.auth.to_cli_config() if request.auth else None
     job = scan_manager.create_job(
         target_url=str(request.url),
@@ -428,13 +656,12 @@ async def create_scan(request: ScanRequest, _: None = Depends(_require_api_key))
 
 
 @app.get("/api/status/{scan_id}", response_model=ScanStatusResponse)
-async def get_status(scan_id: str, _: None = Depends(_require_api_key)) -> ScanStatusResponse:
+async def get_status(scan_id: str, _: None = Depends(_require_authorized_client)) -> ScanStatusResponse:
     try:
-        job = scan_manager.get_job(scan_id)
+        snapshot = scan_manager.get_snapshot(scan_id)
     except KeyError as exc:  # pragma: no cover - simple 404 path
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan not found") from exc
 
-    snapshot = job.snapshot()
     raw_result = snapshot.pop("result", None)
     return ScanStatusResponse(
         **snapshot,
@@ -443,18 +670,21 @@ async def get_status(scan_id: str, _: None = Depends(_require_api_key)) -> ScanS
 
 
 @app.get("/api/results/{scan_id}", response_model=ScanResultResponse)
-async def get_results(scan_id: str, _: None = Depends(_require_api_key)) -> ScanResultResponse:
+async def get_results(scan_id: str, _: None = Depends(_require_authorized_client)) -> ScanResultResponse:
     try:
-        job = scan_manager.get_job(scan_id)
+        snapshot = scan_manager.get_snapshot(scan_id)
     except KeyError as exc:  # pragma: no cover - simple 404 path
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan not found") from exc
 
-    if job.status == "failed":
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=job.error or "Scan failed")
-    if job.status != "completed" or not job.result:
+    if snapshot["status"] == "failed":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=snapshot.get("error") or "Scan failed")
+    if snapshot["status"] != "completed":
         raise HTTPException(status_code=status.HTTP_202_ACCEPTED, detail="Scan still in progress")
 
-    result = job.snapshot_result()
+    try:
+        result = scan_manager.get_result_document(scan_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Result not found") from exc
 
     report_files = {
         key: _relative_report_path(value) for key, value in result["report_files"].items()
@@ -475,19 +705,16 @@ async def get_results(scan_id: str, _: None = Depends(_require_api_key)) -> Scan
 
 
 @app.get("/api/reports/{scan_id}/{report_type}")
-async def download_report(scan_id: str, report_type: str, _: None = Depends(_require_api_key)) -> FileResponse:
+async def download_report(scan_id: str, report_type: str, _: None = Depends(_require_authorized_client)) -> FileResponse:
     if report_type not in {"json", "markdown"}:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid report type")
 
     try:
-        job = scan_manager.get_job(scan_id)
+        result = scan_manager.get_result_document(scan_id)
     except KeyError as exc:  # pragma: no cover
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan not found") from exc
 
-    if job.status != "completed" or not job.result:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Report not ready")
-
-    file_path = Path(job.result["report_files"][report_type]).resolve()
+    file_path = Path(result["report_files"][report_type]).resolve()
     if not file_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report file missing")
 
