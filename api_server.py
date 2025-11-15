@@ -45,6 +45,7 @@ ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv("API_ALLOWED_ORIGINS",
 MAX_WORKERS = int(os.getenv("API_MAX_WORKERS", "2"))
 REPORTS_DIR = Path(os.getenv("REPORTS_DIR", "reports")).resolve()
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+SERVICE_STARTED_AT = datetime.utcnow()
 
 # ---------------------------------------------------------------------------
 # Pydantic models
@@ -387,6 +388,18 @@ scan_manager = ScanManager(max_workers=MAX_WORKERS)
 @app.on_event("shutdown")
 async def shutdown_event() -> None:  # pragma: no cover - FastAPI infrastructure
     scan_manager.shutdown()
+
+
+@app.get("/api/status/health")
+async def health_check() -> Dict[str, Any]:
+    return {
+        "status": "ok",
+        "version": app.version,
+        "started_at": SERVICE_STARTED_AT,
+        "uptime_seconds": int((datetime.utcnow() - SERVICE_STARTED_AT).total_seconds()),
+        "active_jobs": len(scan_manager.jobs),
+        "max_workers": MAX_WORKERS,
+    }
 
 
 @app.post("/api/scan", response_model=ScanStatusResponse, status_code=status.HTTP_202_ACCEPTED)
