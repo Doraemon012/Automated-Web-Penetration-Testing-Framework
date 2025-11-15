@@ -307,6 +307,13 @@ class ScanManager:
     def shutdown(self) -> None:
         self._executor.shutdown(wait=False)
 
+    def job_stats(self) -> Dict[str, int]:
+        with self._manager_lock:
+            total = len(self._jobs)
+            running = sum(1 for job in self._jobs.values() if job.status == "running")
+            queued = sum(1 for job in self._jobs.values() if job.status == "queued")
+        return {"total": total, "running": running, "queued": queued}
+
 
 # ---------------------------------------------------------------------------
 # Helper functions
@@ -392,12 +399,13 @@ async def shutdown_event() -> None:  # pragma: no cover - FastAPI infrastructure
 
 @app.get("/api/status/health")
 async def health_check() -> Dict[str, Any]:
+    stats = scan_manager.job_stats()
     return {
         "status": "ok",
         "version": app.version,
         "started_at": SERVICE_STARTED_AT,
         "uptime_seconds": int((datetime.utcnow() - SERVICE_STARTED_AT).total_seconds()),
-        "active_jobs": len(scan_manager.jobs),
+        "job_counts": stats,
         "max_workers": MAX_WORKERS,
     }
 
