@@ -1,5 +1,5 @@
 # Official Playwright image with Python + all browsers preinstalled
-FROM playwright/python:v1.56.0
+FROM mcr.microsoft.com/playwright/python:v1.46.0-jammy
 
 # Avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
