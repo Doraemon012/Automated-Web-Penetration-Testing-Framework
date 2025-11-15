@@ -1,7 +1,7 @@
 # Dockerfile enabling Playwright (Chromium) for the Vanguard API service
 # Tailored to this repository structure.
 # Base image includes Playwright runtimes and system dependencies.
-FROM mcr.microsoft.com/playwright/python:v1.56.0-jammy
+FROM playwright/python:v1.56.0
 
 # Prevent interactive apt dialogs
 ENV DEBIAN_FRONTEND=noninteractive
@@ -14,7 +14,7 @@ COPY . .
 # Install Python dependencies
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
-    && playwright install --with-deps chromium
+    && playwright install --with-deps
 
 EXPOSE 10000
 
