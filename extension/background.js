@@ -1,10 +1,15 @@
 const DEFAULT_SETTINGS = {
-  apiBaseUrl: "http://localhost:8000",
+  apiBaseUrl: "https://vanguard-api-h9x9.onrender.com",
+  apiKey: "8c8e14cb922e5fbb914cb61b7ee08873",
   defaultMode: "standard",
-  useJsCrawler: false,
+  useJsCrawler: true,
   passiveChecksEnabled: true,
   pollingIntervalMs: 4000,
 };
+
+function normalizeSettings(raw) {
+  return { ...DEFAULT_SETTINGS, ...(raw || {}) };
+}
 
 let authState = {
   email: null,
@@ -33,7 +38,8 @@ chrome.runtime.onStartup.addListener(async () => {
 async function bootstrapState() {
   const stored = await chrome.storage.local.get(["settings", "authState"]);
   if (stored.settings) {
-    updateSettings(stored.settings);
+    const normalized = normalizeSettings(stored.settings);
+    await chrome.storage.local.set({ settings: normalized });
   } else {
     await chrome.storage.local.set({ settings: DEFAULT_SETTINGS });
   }
@@ -43,12 +49,13 @@ async function bootstrapState() {
 }
 
 function updateSettings(next) {
-  chrome.storage.local.set({ settings: next });
+  const normalized = normalizeSettings(next);
+  chrome.storage.local.set({ settings: normalized });
 }
 
 async function getSettings() {
   const { settings } = await chrome.storage.local.get("settings");
-  return settings || DEFAULT_SETTINGS;
+  return normalizeSettings(settings);
 }
 
 function cacheAuthState(next) {
@@ -78,6 +85,10 @@ async function apiFetch(path, { method = "GET", body, headers = {}, requiresAuth
     "Content-Type": "application/json",
     ...headers,
   };
+
+  if (settings.apiKey) {
+    fetchHeaders["X-API-Key"] = settings.apiKey;
+  }
 
   if (requiresAuth && tokenIsValid()) {
     fetchHeaders["Authorization"] = `Bearer ${authState.token}`;

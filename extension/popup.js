@@ -14,6 +14,9 @@ const downloadBtn = document.getElementById("downloadReport");
 const refreshHistoryBtn = document.getElementById("refreshHistory");
 const openOptionsBtn = document.getElementById("openOptions");
 const currentUrlBadge = document.getElementById("currentUrl");
+const modeChips = document.querySelectorAll(".mode-chip");
+const STATUS_VARIANTS = ["status-pill-success", "status-pill-warn", "status-pill-danger", "status-pill-info"];
+let currentTargetUrl = null;
 
 let latestResult = null;
 
@@ -34,7 +37,8 @@ async function init() {
   });
 
   await loadAuthState();
-  await hydrateTargetField();
+  await hydrateTargetContext();
+  wireModeChips();
   await refreshHistory();
 }
 
@@ -92,9 +96,13 @@ logoutBtn.addEventListener("click", async () => {
 scanForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formData = new FormData(scanForm);
+  if (!currentTargetUrl) {
+    toast("Active tab URL unavailable");
+    return;
+  }
   const payload = {
-    url: formData.get("target"),
-    mode: formData.get("mode"),
+    url: currentTargetUrl,
+    mode: formData.get("mode") || "standard",
     useJs: Boolean(formData.get("useJs")),
   };
   try {
@@ -118,13 +126,39 @@ downloadBtn.addEventListener("click", () => {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 });
 
-async function hydrateTargetField() {
+async function hydrateTargetContext() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tab?.url) {
-    const targetInput = scanForm.querySelector('input[name="target"]');
-    targetInput.value = tab.url;
+    currentTargetUrl = tab.url;
     currentUrlBadge.textContent = new URL(tab.url).hostname;
+  } else {
+    currentUrlBadge.textContent = "Grant tab access";
   }
+}
+
+function wireModeChips() {
+  updateModeChipState();
+  modeChips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const input = chip.querySelector("input");
+      if (input) {
+        input.checked = true;
+        updateModeChipState();
+      }
+    });
+  });
+  scanForm.addEventListener("change", (event) => {
+    if (event.target.name === "mode") {
+      updateModeChipState();
+    }
+  });
+}
+
+function updateModeChipState() {
+  modeChips.forEach((chip) => {
+    const checked = chip.querySelector("input")?.checked;
+    chip.classList.toggle("active", Boolean(checked));
+  });
 }
 
 async function refreshHistory() {
@@ -138,11 +172,20 @@ async function refreshHistory() {
 
 function renderHistory(scans) {
   historyList.innerHTML = "";
+  if (!scans.length) {
+    const empty = document.createElement("p");
+    empty.className = "text-xs text-slate-400";
+    empty.textContent = "No recent scans yet.";
+    historyList.appendChild(empty);
+    return;
+  }
   scans.forEach((scan) => {
     const entry = historyTemplate.content.cloneNode(true);
     entry.querySelector(".data-target").textContent = scan.target_url;
-    entry.querySelector(".data-status").textContent = scan.status;
-    entry.querySelector(".data-mode").textContent = `${scan.mode} • ${scan.use_js ? "JS" : "HTTP"}`;
+    const statusNode = entry.querySelector(".data-status");
+    statusNode.textContent = formatStatus(scan.status);
+    applyStatusTone(statusNode, scan.status);
+    entry.querySelector(".data-mode").textContent = `${scan.mode} • ${scan.use_js ? "Playwright" : "HTTP"}`;
     entry.querySelector(".data-view").addEventListener("click", () => viewResult(scan.scan_id));
     historyList.appendChild(entry);
   });
@@ -162,15 +205,21 @@ async function viewResult(scanId) {
 function renderResult(result) {
   if (!result) return;
   resultSection.classList.remove("hidden");
+  const completed = result.completed_at
+    ? new Date(result.completed_at).toLocaleString()
+    : "Processing";
   resultSummary.innerHTML = `
-    <p class="text-slate-100 text-sm font-semibold">${result.target_url}</p>
-    <p>${new Date(result.completed_at).toLocaleString()} • ${result.mode} • ${result.use_js ? "JS" : "HTTP"}</p>
-    <p>${result.total_findings} findings</p>
+    <div class="text-xs text-slate-400 uppercase tracking-wide">Target</div>
+    <p class="text-base font-semibold text-white">${result.target_url}</p>
+    <div class="text-xs text-slate-400 uppercase tracking-wide mt-2">Run details</div>
+    <p>${completed} • ${result.mode} • ${result.use_js ? "Playwright" : "HTTP"} mode</p>
+    <div class="text-xs text-slate-400 uppercase tracking-wide mt-2">Findings</div>
+    <p class="text-lg font-semibold">${result.total_findings ?? 0}</p>
   `;
   severityBadges.innerHTML = "";
   Object.entries(result.severity_counts || {}).forEach(([key, value]) => {
     const badge = document.createElement("span");
-    badge.className = `badge badge-${severityColor(key)}`;
+    badge.className = `severity-pill badge-${severityColor(key)}`;
     badge.textContent = `${key}: ${value}`;
     severityBadges.appendChild(badge);
   });
@@ -200,11 +249,13 @@ async function broadcastFindings(result) {
 
 function renderScanStatus(status) {
   if (!status) return;
-  scanStatus.textContent = `${status.status} • ${status.progress}% • ${status.message}`;
+  scanStatus.textContent = `${formatStatus(status.status)} • ${status.progress}% • ${status.message}`;
+  applyStatusTone(scanStatus, status.status);
 }
 
 function toast(message) {
   scanStatus.textContent = message;
+  applyStatusTone(scanStatus, "info");
 }
 
 function callBackground(type, payload) {
@@ -225,4 +276,32 @@ function callBackground(type, payload) {
       resolve(response);
     });
   });
+}
+
+function applyStatusTone(node, status) {
+  if (!node) return;
+  STATUS_VARIANTS.forEach((cls) => node.classList.remove(cls));
+  const tone = statusClass(status);
+  if (tone) {
+    node.classList.add(tone);
+  }
+}
+
+function statusClass(status) {
+  const normalized = (status || "").toLowerCase();
+  if (["completed", "ready", "done", "success"].includes(normalized)) {
+    return "status-pill-success";
+  }
+  if (["failed", "error", "cancelled"].includes(normalized)) {
+    return "status-pill-danger";
+  }
+  if (["running", "in_progress", "queued", "pending"].includes(normalized)) {
+    return "status-pill-warn";
+  }
+  return "status-pill-info";
+}
+
+function formatStatus(status) {
+  const normalized = (status || "").toLowerCase().replace(/_/g, " ");
+  return normalized.replace(/(^|\s)\S/g, (match) => match.toUpperCase()) || "Unknown";
 }

@@ -20,6 +20,7 @@ function init() {
 async function loadSettings() {
   const { data } = await callBackground("get_settings");
   settingsForm.apiBaseUrl.value = data.apiBaseUrl || "";
+  settingsForm.apiKey.value = data.apiKey || "";
   settingsForm.defaultMode.value = data.defaultMode || "standard";
   settingsForm.useJsCrawler.checked = Boolean(data.useJsCrawler);
   settingsForm.passiveChecksEnabled.checked = Boolean(data.passiveChecksEnabled);
@@ -30,6 +31,7 @@ async function saveSettings(event) {
   event.preventDefault();
   const formData = new FormData(settingsForm);
   const payload = Object.fromEntries(formData.entries());
+  payload.apiKey = (payload.apiKey || "").trim();
   payload.useJsCrawler = Boolean(formData.get("useJsCrawler"));
   payload.passiveChecksEnabled = Boolean(formData.get("passiveChecksEnabled"));
   payload.pollingIntervalMs = Number(payload.pollingIntervalMs) || 4000;
