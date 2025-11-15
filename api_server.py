@@ -23,8 +23,19 @@ from reports.cvss_compute import enhance_finding_with_cvss, deduplicate_findings
 from reports.reporter import Reporter
 from reports.risk import enrich_findings
 
+
+def _resolve_log_level() -> int | str:
+    level = os.getenv("API_LOG_LEVEL", "INFO")
+    if isinstance(level, str):
+        level = level.strip()
+        if level.isdigit():
+            return int(level)
+        return level.upper()
+    return level
+
+
 logger = logging.getLogger("webpentest.api")
-logging.basicConfig(level=os.getenv("API_LOG_LEVEL", "INFO"))
+logging.basicConfig(level=_resolve_log_level())
 
 # ---------------------------------------------------------------------------
 # Configuration
