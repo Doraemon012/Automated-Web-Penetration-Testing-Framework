@@ -4,17 +4,115 @@ const scheduleList = document.getElementById("scheduleList");
 const scheduleTemplate = document.getElementById("scheduleItemTemplate");
 const statusLabel = document.getElementById("settingsStatus");
 const testBtn = document.getElementById("testConnection");
+const resetDefaultsBtn = document.getElementById("resetDefaults");
+const optionsAuthForm = document.getElementById("optionsAuthForm");
+const optionsRegisterBtn = document.getElementById("optionsRegisterBtn");
+const optionsLogoutBtn = document.getElementById("optionsLogoutBtn");
+const optionsAuthStatus = document.getElementById("optionsAuthStatus");
+const authLockedSections = document.querySelectorAll("[data-auth-locked]");
 
 const SCHEDULE_KEY = "scanSchedules";
 
-init();
+init().catch((error) => console.error("Options init failed", error));
 
-function init() {
-  loadSettings();
-  loadSchedules();
-  settingsForm.addEventListener("submit", saveSettings);
-  scheduleForm.addEventListener("submit", addSchedule);
-  testBtn.addEventListener("click", testConnection);
+async function init() {
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === "auth_changed") {
+      renderAuthState(message.payload || {});
+    }
+  });
+
+  await loadAuthState();
+  await loadSettings();
+  await loadSchedules();
+
+  settingsForm?.addEventListener("submit", saveSettings);
+  scheduleForm?.addEventListener("submit", addSchedule);
+  testBtn?.addEventListener("click", testConnection);
+  resetDefaultsBtn?.addEventListener("click", resetDefaults);
+  optionsAuthForm?.addEventListener("submit", submitAuthLogin);
+  optionsRegisterBtn?.addEventListener("click", submitAuthRegister);
+  optionsLogoutBtn?.addEventListener("click", submitAuthLogout);
+}
+
+async function loadAuthState() {
+  try {
+    const { data } = await callBackground("get_auth_state");
+    renderAuthState(data || {});
+  } catch (error) {
+    console.error("Auth state unavailable", error);
+    renderAuthState({});
+  }
+}
+
+function renderAuthState(state) {
+  const signedIn = Boolean(state?.token);
+  if (optionsAuthStatus) {
+    optionsAuthStatus.textContent = signedIn ? `Signed in as ${state.email}` : "Signed out";
+  }
+  if (optionsLogoutBtn) {
+    optionsLogoutBtn.classList.toggle("hidden", !signedIn);
+  }
+  toggleAuthLockedSections(signedIn);
+}
+
+function toggleAuthLockedSections(enabled) {
+  authLockedSections.forEach((section) => {
+    section.classList.toggle("opacity-50", !enabled);
+    section.classList.toggle("pointer-events-none", !enabled);
+    section.querySelectorAll("input, select, textarea, button").forEach((control) => {
+      control.disabled = !enabled;
+    });
+  });
+}
+
+async function submitAuthLogin(event) {
+  event.preventDefault();
+  const formData = new FormData(optionsAuthForm);
+  const payload = {
+    email: formData.get("email"),
+    password: formData.get("password"),
+  };
+  try {
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = "Signing in...";
+    }
+    await callBackground("login", payload);
+    optionsAuthForm.reset();
+  } catch (error) {
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = error.message || "Login failed";
+    }
+  }
+}
+
+async function submitAuthRegister(event) {
+  event.preventDefault();
+  const formData = new FormData(optionsAuthForm);
+  const payload = {
+    email: formData.get("email"),
+    password: formData.get("password"),
+  };
+  try {
+    await callBackground("register", payload);
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = "Registration successful. Sign in to continue.";
+    }
+  } catch (error) {
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = error.message || "Registration failed";
+    }
+  }
+}
+
+async function submitAuthLogout() {
+  try {
+    await callBackground("logout");
+  } catch (error) {
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = error.message || "Logout failed";
+    }
+  }
 }
 
 async function loadSettings() {
@@ -43,10 +141,27 @@ async function saveSettings(event) {
   }
 }
 
+async function resetDefaults() {
+  statusLabel.textContent = "Restoring defaults...";
+  try {
+    await callBackground("reset_settings");
+    await loadSettings();
+    statusLabel.textContent = "Defaults restored";
+  } catch (error) {
+    statusLabel.textContent = error.message || "Unable to reset";
+  }
+}
+
 async function testConnection() {
   statusLabel.textContent = "Testing...";
+  const apiBaseUrl = settingsForm.apiBaseUrl.value.trim();
+  const apiKey = settingsForm.apiKey.value.trim();
+  if (!apiBaseUrl) {
+    statusLabel.textContent = "API URL required";
+    return;
+  }
   try {
-    const { data } = await callBackground("health_check");
+    const { data } = await callBackground("health_check", { apiBaseUrl, apiKey });
     statusLabel.textContent = `API OK • ${data.status}`;
   } catch (error) {
     statusLabel.textContent = error.message || "API unreachable";
@@ -89,6 +204,13 @@ async function removeSchedule(id) {
 
 function renderSchedules(schedules) {
   scheduleList.innerHTML = "";
+  if (!schedules.length) {
+    const empty = document.createElement("p");
+    empty.className = "text-xs text-slate-400";
+    empty.textContent = "No schedules configured.";
+    scheduleList.appendChild(empty);
+    return;
+  }
   schedules.forEach((entry) => {
     const row = scheduleTemplate.content.cloneNode(true);
     row.querySelector(".data-target").textContent = entry.target;

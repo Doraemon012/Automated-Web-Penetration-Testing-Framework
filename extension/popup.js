@@ -1,7 +1,7 @@
-const authForm = document.getElementById("authForm");
-const registerBtn = document.getElementById("registerBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const authStatus = document.getElementById("authStatus");
+const authSettingsBtn = document.getElementById("authSettingsBtn");
+const authMessage = document.getElementById("authMessage");
 const scanSection = document.getElementById("scanSection");
 const scanForm = document.getElementById("scanForm");
 const scanStatus = document.getElementById("scanStatus");
@@ -15,6 +15,7 @@ const refreshHistoryBtn = document.getElementById("refreshHistory");
 const openOptionsBtn = document.getElementById("openOptions");
 const currentUrlBadge = document.getElementById("currentUrl");
 const modeChips = document.querySelectorAll(".mode-chip");
+const authLockedSections = document.querySelectorAll("[data-auth-locked]");
 const STATUS_VARIANTS = ["status-pill-success", "status-pill-warn", "status-pill-danger", "status-pill-info"];
 let currentTargetUrl = null;
 
@@ -35,6 +36,9 @@ async function init() {
   openOptionsBtn.addEventListener("click", () => {
     chrome.runtime.openOptionsPage();
   });
+  authSettingsBtn.addEventListener("click", () => {
+    chrome.runtime.openOptionsPage();
+  });
 
   await loadAuthState();
   await hydrateTargetContext();
@@ -50,43 +54,22 @@ async function loadAuthState() {
 function renderAuth(state) {
   const signedIn = Boolean(state?.token);
   authStatus.textContent = signedIn ? `Signed in as ${state.email}` : "Signed out";
-  toggleSection(scanSection, signedIn);
+  if (authMessage) {
+    authMessage.textContent = signedIn
+      ? "You're ready to launch scans from the popup. Manage your credentials in settings."
+      : "Open the settings page to sign in or create an account before running scans.";
+  }
+  authLockedSections.forEach((section) => toggleSection(section, signedIn));
   logoutBtn.classList.toggle("hidden", !signedIn);
 }
 
 function toggleSection(section, enabled) {
   section.classList.toggle("opacity-50", !enabled);
   section.classList.toggle("pointer-events-none", !enabled);
+  section.querySelectorAll("input, select, textarea, button").forEach((control) => {
+    control.disabled = !enabled;
+  });
 }
-
-authForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const formData = new FormData(authForm);
-  const payload = {
-    email: formData.get("email"),
-    password: formData.get("password"),
-  };
-  try {
-    await callBackground("login", payload);
-    authForm.reset();
-  } catch (error) {
-    toast(error.message || "Unable to login");
-  }
-});
-
-registerBtn.addEventListener("click", async () => {
-  const formData = new FormData(authForm);
-  const payload = {
-    email: formData.get("email"),
-    password: formData.get("password"),
-  };
-  try {
-    await callBackground("register", payload);
-    toast("Registration successful. You can sign in now.");
-  } catch (error) {
-    toast(error.message || "Registration failed");
-  }
-});
 
 logoutBtn.addEventListener("click", async () => {
   await callBackground("logout");

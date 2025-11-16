@@ -29,22 +29,20 @@
           <span class="step-index">01</span>
           <div class="flex-1">
             <h2>Authenticate</h2>
-            <p>Use the same credentials you configured for the dashboard.</p>
+            <p>Manage your credentials from the settings panel.</p>
           </div>
           <span id="authStatus" class="status-pill">Signed out</span>
         </div>
-        <form id="authForm" class="form-grid">
-          <input type="email" name="email" placeholder="Email" required class="input" />
-          <input type="password" name="password" placeholder="Password" required class="input" />
-          <div class="flex gap-2">
-            <button type="submit" class="btn btn-primary flex-1">Sign In</button>
-            <button type="button" id="registerBtn" class="btn btn-muted">Register</button>
-          </div>
-        </form>
-        <button id="logoutBtn" class="btn btn-danger hidden">Sign Out</button>
+        <p id="authMessage" class="text-sm text-slate-400">
+          Sign in or create an account from the settings page before launching scans.
+        </p>
+        <div class="flex gap-2">
+          <button id="authSettingsBtn" class="btn btn-primary flex-1">Open Settings</button>
+          <button id="logoutBtn" class="btn btn-danger hidden">Sign Out</button>
+        </div>
       </section>
 
-      <section id="scanSection" class="step-card opacity-50 pointer-events-none">
+      <section id="scanSection" class="step-card opacity-50 pointer-events-none" data-auth-locked>
         <div class="step-heading">
           <span class="step-index">02</span>
           <div>
@@ -92,7 +90,7 @@
         <div id="scanStatus" class="status-pill">Idle</div>
       </section>
 
-      <section class="step-card">
+      <section class="step-card" data-auth-locked>
         <div class="step-heading">
           <span class="step-index">03</span>
           <div>
@@ -104,7 +102,7 @@
         <ul id="historyList" class="history-list text-sm"></ul>
       </section>
 
-      <section id="resultSection" class="step-card hidden">
+      <section id="resultSection" class="step-card hidden" data-auth-locked>
         <div class="step-heading">
           <span class="step-index">04</span>
           <div>

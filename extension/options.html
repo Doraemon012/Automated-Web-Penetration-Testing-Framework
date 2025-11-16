@@ -19,9 +19,29 @@
         <div class="cloud-pill">Cloud API • vanguard-api-h9x9.onrender.com</div>
       </header>
 
-      <section class="step-card">
+      <section class="step-card" id="accountSection">
         <div class="step-heading">
           <span class="step-index">01</span>
+          <div>
+            <h2>Account & Authentication</h2>
+            <p>Sign in with the same credentials you use on the dashboard.</p>
+          </div>
+          <span id="optionsAuthStatus" class="status-pill">Signed out</span>
+        </div>
+        <form id="optionsAuthForm" class="form-grid">
+          <input type="email" name="email" placeholder="Email" class="input" required />
+          <input type="password" name="password" placeholder="Password" class="input" required />
+          <div class="flex gap-2">
+            <button type="submit" class="btn btn-primary flex-1">Sign In</button>
+            <button type="button" id="optionsRegisterBtn" class="btn btn-muted">Register</button>
+          </div>
+        </form>
+        <button id="optionsLogoutBtn" class="btn btn-danger hidden">Sign Out</button>
+      </section>
+
+      <section class="step-card">
+        <div class="step-heading">
+          <span class="step-index">02</span>
           <div>
             <h2>API connection</h2>
             <p>Same FastAPI instance the web app uses.</p>
@@ -69,14 +89,15 @@
           <div class="flex gap-2">
             <button type="submit" class="btn btn-primary flex-1">Save</button>
             <button type="button" id="testConnection" class="btn btn-muted">Test connection</button>
+            <button type="button" id="resetDefaults" class="btn btn-danger">Reset defaults</button>
           </div>
           <p id="settingsStatus" class="text-sm text-slate-400"></p>
         </form>
       </section>
 
-      <section class="step-card">
+      <section class="step-card" data-auth-locked>
         <div class="step-heading">
-          <span class="step-index">02</span>
+          <span class="step-index">03</span>
           <div>
             <h2>Local schedules</h2>
             <p>Only stored in this browser profile.</p>

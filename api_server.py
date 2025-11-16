@@ -574,6 +574,7 @@ allow_all = len(ALLOWED_ORIGINS) == 1 and ALLOWED_ORIGINS[0] == "*"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"] if allow_all else ALLOWED_ORIGINS,
+    allow_origin_regex=None if allow_all else r"chrome-extension://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

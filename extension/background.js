@@ -53,6 +53,12 @@ function updateSettings(next) {
   chrome.storage.local.set({ settings: normalized });
 }
 
+async function resetSettingsToDefault() {
+  await chrome.storage.local.set({ settings: DEFAULT_SETTINGS });
+  notifyClients({ type: "settings_changed", payload: DEFAULT_SETTINGS });
+  return DEFAULT_SETTINGS;
+}
+
 async function getSettings() {
   const { settings } = await chrome.storage.local.get("settings");
   return normalizeSettings(settings);
@@ -63,9 +69,12 @@ function cacheAuthState(next) {
   chrome.storage.local.set({ authState: next });
 }
 
-function clearAuthState() {
+function clearAuthState({ silent } = {}) {
   authState = { email: null, token: null, expiresAt: null };
   chrome.storage.local.remove("authState");
+  if (!silent) {
+    notifyClients({ type: "auth_changed", payload: authState });
+  }
 }
 
 function tokenIsValid() {
@@ -75,10 +84,16 @@ function tokenIsValid() {
   return Date.now() < authState.expiresAt - 60 * 1000;
 }
 
-async function apiFetch(path, { method = "GET", body, headers = {}, requiresAuth = true } = {}) {
+async function apiFetch(path, { method = "GET", body, headers = {}, requiresAuth = true, overrideSettings = null } = {}) {
   const settings = await getSettings();
-  if (!settings.apiBaseUrl) {
+  const effectiveSettings = { ...settings, ...(overrideSettings || {}) };
+
+  if (!effectiveSettings.apiBaseUrl) {
     throw new Error("API base URL not configured");
+  }
+
+  if (requiresAuth && !tokenIsValid()) {
+    throw new Error("Authentication required");
   }
 
   const fetchHeaders = {
@@ -86,15 +101,15 @@ async function apiFetch(path, { method = "GET", body, headers = {}, requiresAuth
     ...headers,
   };
 
-  if (settings.apiKey) {
-    fetchHeaders["X-API-Key"] = settings.apiKey;
+  if (effectiveSettings.apiKey) {
+    fetchHeaders["X-API-Key"] = effectiveSettings.apiKey;
   }
 
-  if (requiresAuth && tokenIsValid()) {
+  if (requiresAuth) {
     fetchHeaders["Authorization"] = `Bearer ${authState.token}`;
   }
 
-  const response = await fetch(new URL(path, settings.apiBaseUrl).toString(), {
+  const response = await fetch(new URL(path, effectiveSettings.apiBaseUrl).toString(), {
     method,
     headers: fetchHeaders,
     body,
@@ -179,8 +194,8 @@ async function fetchStatus(scanId) {
   return apiFetch(`/api/status/${scanId}`);
 }
 
-async function healthCheck() {
-  return apiFetch("/api/status/health", { requiresAuth: false });
+async function healthCheck(overrides) {
+  return apiFetch("/api/status/health", { requiresAuth: false, overrideSettings: overrides });
 }
 
 async function schedulePolling(scanId) {
@@ -290,6 +305,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           updateSettings(payload);
           respond({ success: true });
           break;
+        case "reset_settings":
+          await resetSettingsToDefault();
+          respond({ success: true });
+          break;
         case "start_scan":
           respond(await startScan(payload));
           break;
@@ -303,7 +322,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           respond(await fetchStatus(payload.scanId));
           break;
         case "health_check":
-          respond(await healthCheck());
+          respond(await healthCheck(payload));
           break;
         default:
           respond({ message: "Unknown message" }, true);
