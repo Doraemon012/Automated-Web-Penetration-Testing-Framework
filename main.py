@@ -187,6 +187,7 @@
 import sys
 import argparse
 import asyncio
+from contextlib import contextmanager
 from crawler.crawler import Crawler
 try:
     from crawler.js_crawler import JSCrawler  # Playwright-based crawler
@@ -324,6 +325,21 @@ def run_complete_scan(target_url, auth_config=None, use_js=False, mode="standard
     finally:
         if session_manager:
             session_manager.logout()
+
+
+@contextmanager
+def prepared_scan_reporter(target_url, auth_config=None, use_js=False, mode="standard"):
+    """Yield a Reporter whose findings already passed through finalize_findings.
+
+    Ensures any temporary buffers are cleaned up after the caller finishes
+    consuming or persisting the findings.
+    """
+    reporter = run_complete_scan(target_url, auth_config, use_js, mode=mode)
+    try:
+        reporter.overwrite(finalize_findings(reporter.iter_findings()))
+        yield reporter
+    finally:
+        reporter.cleanup()
 
 def test_framework():
     """Test all framework components"""

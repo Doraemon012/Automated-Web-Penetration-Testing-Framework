@@ -21,10 +21,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr, Field, HttpUrl, root_validator
 
-from main import run_complete_scan
-from reports.cvss_compute import enhance_finding_with_cvss, deduplicate_findings
-from reports.reporter import Reporter
-from reports.risk import enrich_findings
+from main import prepared_scan_reporter
 from db.mongo_repository import ScanRepository
 from db.user_repository import UserRepository
 
@@ -359,28 +356,24 @@ class ScanManager:
             job.update(progress=10, message="Launching scanner")
             self._persist_job(job)
 
-            findings = run_complete_scan(
+            with prepared_scan_reporter(
                 normalized_target,
                 auth_config=job.auth_config,
                 use_js=job.use_js,
                 mode=job.mode,
-            )
+            ) as reporter:
+                job.update(progress=70, message="Enriching findings")
+                self._persist_job(job)
 
-            job.update(progress=70, message="Enriching findings")
-            enriched = [enhance_finding_with_cvss(f) for f in findings]
-            enriched = deduplicate_findings(enriched)
-            enriched = enrich_findings(enriched)
-            sanitized = _sanitize_findings(enriched)
-            self._persist_job(job)
+                findings = list(reporter.iter_findings())
+                sanitized = _sanitize_findings(findings)
 
-            job.update(progress=85, message="Generating reports")
-            self._persist_job(job)
-            result_payload = _build_result_payload(job, sanitized)
+                job.update(progress=85, message="Generating reports")
+                self._persist_job(job)
+                result_payload = _build_result_payload(job, sanitized)
 
-            reporter = Reporter()
-            reporter.findings = sanitized
-            reporter.save_json(result_payload["report_files"]["json"])  # type: ignore[arg-type]
-            reporter.save_markdown(result_payload["report_files"]["markdown"])  # type: ignore[arg-type]
+                reporter.save_json(result_payload["report_files"]["json"], findings=sanitized)
+                reporter.save_markdown(result_payload["report_files"]["markdown"], findings=sanitized)
 
             job.update(
                 status="completed",
