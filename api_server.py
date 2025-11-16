@@ -4,6 +4,7 @@ This service exposes the core scanning engine via REST endpoints so it can be
 consumed by external clients such as browser extensions or other applications.
 """
 from __future__ import annotations
+import json
 import logging
 import os
 import threading
@@ -330,12 +331,12 @@ class ScanManager:
     def get_result_document(self, job_id: str) -> Dict[str, Any]:
         job = self._get_job_if_present(job_id)
         if job and job.result:
-            return job.snapshot_result()
+            return self._hydrate_result_payload(job.snapshot_result())
 
         if self._repository:
             document = self._repository.get_scan(job_id)
             if document and document.get("result_full"):
-                return document["result_full"]
+                return self._hydrate_result_payload(document["result_full"])
 
         raise KeyError(job_id)
 
@@ -390,6 +391,7 @@ class ScanManager:
             )
             logger.info("Scan job %s completed", job.id)
             self._persist_job(job)
+            self._release_job_memory(job)
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception("Scan job %s failed", job.id)
             job.update(status="failed", progress=100, message="Scan failed", error=str(exc))
@@ -420,6 +422,24 @@ class ScanManager:
         else:
             document["result_full"] = None
         self._repository.upsert(document)
+
+    def _release_job_memory(self, job: ScanJob) -> None:
+        """Drop large fields from the in-memory job result once persisted."""
+        with job._lock:
+            if not job.result:
+                return
+            findings = job.result.get("findings")
+            if isinstance(findings, list):
+                job.result["findings"] = None
+
+    def _hydrate_result_payload(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        hydrated = dict(payload)
+        if hydrated.get("findings"):
+            return hydrated
+        report_files = hydrated.get("report_files") or {}
+        report_path = report_files.get("json")
+        hydrated["findings"] = _load_findings_from_file(report_path)
+        return hydrated
 
     def _get_job_if_present(self, job_id: str) -> Optional[ScanJob]:
         with self._manager_lock:
@@ -539,6 +559,28 @@ def _build_result_payload(job: ScanJob, findings: List[Dict[str, Any]]) -> Dict[
         "findings": findings,
     }
 
+
+def _load_findings_from_file(report_path: Optional[str]) -> List[Dict[str, Any]]:
+    if not report_path:
+        return []
+    try:
+        path = Path(report_path).resolve()
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        if isinstance(data, dict):
+            findings = data.get("findings")
+            if isinstance(findings, list):
+                return findings
+            return []
+        if isinstance(data, list):
+            return data
+    except FileNotFoundError:
+        logger.warning("Report file missing when hydrating findings: %s", report_path)
+    except json.JSONDecodeError as exc:
+        logger.error("Failed to parse findings file %s: %s", report_path, exc)
+    except Exception as exc:  # pragma: no cover - unexpected filesystem errors
+        logger.error("Unexpected error loading findings from %s: %s", report_path, exc)
+    return []
 
 def _require_authorized_client(
     x_api_key: Optional[str] = Header(default=None),

@@ -55,6 +55,7 @@ scan_status = {
 def run_scan_background(target_url, scan_config=None):
     """Run the complete scan in a background thread with enhanced features"""
     global scan_status
+    session_manager = None
     
     try:
         scan_status.update({'running': True, 'progress': 0, 'current_task': 'Initializing...', 'error': None})
@@ -66,7 +67,6 @@ def run_scan_background(target_url, scan_config=None):
             raise Exception(f"Target is down or unreachable: {target}")
         
         # Initialize session manager if authentication is provided
-        session_manager = None
         if scan_config and scan_config.get('auth_type'):
             scan_status.update({'current_task': 'Setting up authentication...', 'progress': 15})
             session_manager = SessionManager(target)
@@ -245,18 +245,8 @@ def run_scan_background(target_url, scan_config=None):
             severity = finding.get('severity', 'Info')
             vulnerabilities[severity] = vulnerabilities.get(severity, 0) + 1
         
-        scan_status['results'] = {
-            'total_vulnerabilities': len(reporter.findings),
-            'vulnerabilities_by_severity': vulnerabilities,
-            'json_report': json_filename,
-            'md_report': md_filename,
-            'target_url': target,
-            'scan_time': datetime.now().isoformat(),
-            'findings': reporter.findings,
-            'mode': mode,
-            'auth_used': bool(session_manager and session_manager.authenticated)
-        }
-        
+        scan_time = datetime.now().isoformat()
+
         # Save reports
         reporter.save_json(json_filename)
         reporter.save_markdown(md_filename)
@@ -266,7 +256,7 @@ def run_scan_background(target_url, scan_config=None):
             'target_url': target,
             'total_vulnerabilities': len(reporter.findings),
             'vulnerabilities_by_severity': vulnerabilities,
-            'scan_time': datetime.now().isoformat(),
+            'scan_time': scan_time,
             'mode': mode,
             'auth_used': bool(session_manager and session_manager.authenticated),
             'findings': reporter.findings
@@ -274,6 +264,19 @@ def run_scan_background(target_url, scan_config=None):
         
         with open(json_filename, 'w', encoding='utf-8') as f:
             json.dump(complete_results, f, indent=4)
+        reporter.findings.clear()
+
+        scan_status['results'] = {
+            'total_vulnerabilities': complete_results['total_vulnerabilities'],
+            'vulnerabilities_by_severity': vulnerabilities,
+            'json_report': json_filename,
+            'md_report': md_filename,
+            'target_url': target,
+            'scan_time': scan_time,
+            'mode': mode,
+            'auth_used': bool(session_manager and session_manager.authenticated),
+            'findings_file': json_filename
+        }
         
         scan_status.update({'current_task': 'Scan completed!', 'progress': 100})
         
@@ -285,6 +288,8 @@ def run_scan_background(target_url, scan_config=None):
         print(f"[ERROR] Traceback:\n{traceback_str}")
         scan_status['error'] = error_msg
     finally:
+        if session_manager:
+            session_manager.logout()
         scan_status['running'] = False
 
 @app.route('/')
@@ -328,10 +333,25 @@ def get_status():
 @app.route('/api/results')
 def get_results():
     """Get scan results"""
-    if scan_status['results']:
-        return jsonify(scan_status['results'])
-    else:
+    if not scan_status['results']:
         return jsonify({'error': 'No results available'}), 404
+
+    results = dict(scan_status['results'])
+    if 'findings' not in results:
+        findings_file = results.get('findings_file') or results.get('json_report')
+        findings_data = []
+        if findings_file and os.path.exists(findings_file):
+            try:
+                with open(findings_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                if isinstance(data, dict) and isinstance(data.get('findings'), list):
+                    findings_data = data['findings']
+                elif isinstance(data, list):
+                    findings_data = data
+            except Exception as exc:
+                print(f"[ERROR] Failed to load findings from {findings_file}: {exc}")
+        results['findings'] = findings_data
+    return jsonify(results)
 
 @app.route('/api/download/<path:filename>')
 def download_report(filename):

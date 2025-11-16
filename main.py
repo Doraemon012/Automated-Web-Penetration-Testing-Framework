@@ -212,113 +212,119 @@ def run_complete_scan(target_url, auth_config=None, use_js=False, mode="standard
     mode: "ultra-safe" | "safe" | "standard" | "aggressive"
     """
     target = normalize_url(target_url)
-    
+
     if not is_site_up(target):
         raise Exception(f"Cannot reach target: {target}")
-    
-    # Initialize session manager if authentication is provided
-    session_manager = None
-    if auth_config:
-        session_manager = SessionManager(target)
-        
-        if auth_config['type'] == 'form':
-            success = session_manager.login_form(
-                auth_config['login_url'],
-                auth_config['username'],
-                auth_config['password'],
-                auth_config.get('username_field', 'username'),
-                auth_config.get('password_field', 'password')
-            )
-        elif auth_config['type'] == 'token':
-            success = session_manager.login_token(
-                auth_config['token'],
-                auth_config.get('header_name', 'Authorization'),
-                auth_config.get('token_prefix', 'Bearer')
-            )
-        elif auth_config['type'] == 'basic':
-            success = session_manager.login_basic_auth(
-                auth_config['username'],
-                auth_config['password']
-            )
-        else:
-            success = False
-            
-        if not success:
-            print("[-] Authentication failed, continuing with unauthenticated scan")
-    
-    # Adjust crawl scope based on mode
-    if mode == "ultra-safe":
-        max_depth = 1
-        print("[+] Using ultra-safe mode for large public sites")
-    elif mode == "safe":
-        max_depth = 1
-    else:
-        max_depth = 2
 
-    # Choose crawler based on JS support requirement & availability
-    if use_js and PLAYWRIGHT_AVAILABLE:
-        print("[+] Using JavaScript-enabled crawler (Playwright)")
-        crawler = JSCrawler(target, max_depth=max_depth, session_manager=session_manager)
-        asyncio.run(crawler.run_crawl())
-    else:
-        if use_js and not PLAYWRIGHT_AVAILABLE:
-            print("[-] Playwright not available, falling back to regular crawler")
-        crawler = Crawler(target, max_depth=max_depth, session_manager=session_manager)
-        crawler.crawl()
-    
-    crawler.save_results()
-    
-    # Initialize Reporter
-    reporter = Reporter()
-    
-    # Run all scans with authenticated session if available
-    session = session_manager.get_session() if session_manager else None
-    
-    # Enhanced scanners with discovered links for better analysis
-    discovered_links = crawler.discovered.get("links", [])
-    
-    print("[+] Running enhanced vulnerability scans...")
-    
-    # Check if target is a large public site (for ultra-safe mode)
-    from scanners.headers import is_large_public_site
-    is_large_site = is_large_public_site(target)
-    
-    # Enhanced security headers analysis (multi-page)
-    if mode != "ultra-safe" or not is_large_site:
-        print("  🔍 Analyzing security headers across multiple pages...")
-        reporter.add_findings(check_security_headers(target, session, discovered_links))
-    else:
-        print("  🔍 Skipping headers analysis for large public site in ultra-safe mode...")
-    
-    # Advanced SQL injection detection (error/time/boolean-based)
-    if mode in ("standard", "aggressive") or (mode == "ultra-safe" and not is_large_site):
-        print("  💉 Testing for SQL injection vulnerabilities...")
-        reporter.add_findings(test_sqli(target, crawler.discovered["forms"], session, mode=mode))
-    
-    # Context-aware XSS scanning
-    if mode != "ultra-safe" or not is_large_site:
-        print("  🕸️  Testing for XSS vulnerabilities...")
-        strict_xss = (mode != "aggressive")
-        reporter.add_findings(test_xss(target, crawler.discovered["forms"], session, strict=strict_xss))
-    else:
-        print("  🕸️  Skipping XSS testing for large public site in ultra-safe mode...")
-    
-    # Comprehensive misconfiguration scanning
-    print("  ⚙️  Checking for misconfigurations...")
-    reporter.add_findings(check_misconfig(target, session))
-    
-    # Enhanced open redirect testing
-    if mode == "aggressive":
-        print("  🔄 Testing for open redirects...")
-        reporter.add_findings(check_open_redirect(target, discovered_links, session))
-    
-    # Parameter fuzzing with verification
-    if mode == "aggressive":
-        print("  🎯 Fuzzing URL parameters...")
-        for link in discovered_links:
-            reporter.add_findings(fuzz_url_params(link, session=session))
-    
-    return reporter.findings
+    session_manager = None
+
+    try:
+        # Initialize session manager if authentication is provided
+        if auth_config:
+            session_manager = SessionManager(target)
+
+            if auth_config['type'] == 'form':
+                success = session_manager.login_form(
+                    auth_config['login_url'],
+                    auth_config['username'],
+                    auth_config['password'],
+                    auth_config.get('username_field', 'username'),
+                    auth_config.get('password_field', 'password')
+                )
+            elif auth_config['type'] == 'token':
+                success = session_manager.login_token(
+                    auth_config['token'],
+                    auth_config.get('header_name', 'Authorization'),
+                    auth_config.get('token_prefix', 'Bearer')
+                )
+            elif auth_config['type'] == 'basic':
+                success = session_manager.login_basic_auth(
+                    auth_config['username'],
+                    auth_config['password']
+                )
+            else:
+                success = False
+
+            if not success:
+                print("[-] Authentication failed, continuing with unauthenticated scan")
+
+        # Adjust crawl scope based on mode
+        if mode == "ultra-safe":
+            max_depth = 1
+            print("[+] Using ultra-safe mode for large public sites")
+        elif mode == "safe":
+            max_depth = 1
+        else:
+            max_depth = 2
+
+        # Choose crawler based on JS support requirement & availability
+        if use_js and PLAYWRIGHT_AVAILABLE:
+            print("[+] Using JavaScript-enabled crawler (Playwright)")
+            crawler = JSCrawler(target, max_depth=max_depth, session_manager=session_manager)
+            asyncio.run(crawler.run_crawl())
+        else:
+            if use_js and not PLAYWRIGHT_AVAILABLE:
+                print("[-] Playwright not available, falling back to regular crawler")
+            crawler = Crawler(target, max_depth=max_depth, session_manager=session_manager)
+            crawler.crawl()
+
+        crawler.save_results()
+
+        # Initialize Reporter
+        reporter = Reporter()
+
+        # Run all scans with authenticated session if available
+        session = session_manager.get_session() if session_manager else None
+
+        # Enhanced scanners with discovered links for better analysis
+        discovered_links = crawler.discovered.get("links", [])
+
+        print("[+] Running enhanced vulnerability scans...")
+
+        # Check if target is a large public site (for ultra-safe mode)
+        from scanners.headers import is_large_public_site
+        is_large_site = is_large_public_site(target)
+
+        # Enhanced security headers analysis (multi-page)
+        if mode != "ultra-safe" or not is_large_site:
+            print("  🔍 Analyzing security headers across multiple pages...")
+            reporter.add_findings(check_security_headers(target, session, discovered_links))
+        else:
+            print("  🔍 Skipping headers analysis for large public site in ultra-safe mode...")
+
+        # Advanced SQL injection detection (error/time/boolean-based)
+        if mode in ("standard", "aggressive") or (mode == "ultra-safe" and not is_large_site):
+            print("  💉 Testing for SQL injection vulnerabilities...")
+            reporter.add_findings(test_sqli(target, crawler.discovered["forms"], session, mode=mode))
+
+        # Context-aware XSS scanning
+        if mode != "ultra-safe" or not is_large_site:
+            print("  🕸️  Testing for XSS vulnerabilities...")
+            strict_xss = (mode != "aggressive")
+            reporter.add_findings(test_xss(target, crawler.discovered["forms"], session, strict=strict_xss))
+        else:
+            print("  🕸️  Skipping XSS testing for large public site in ultra-safe mode...")
+
+        # Comprehensive misconfiguration scanning
+        print("  ⚙️  Checking for misconfigurations...")
+        reporter.add_findings(check_misconfig(target, session))
+
+        # Enhanced open redirect testing
+        if mode == "aggressive":
+            print("  🔄 Testing for open redirects...")
+            reporter.add_findings(check_open_redirect(target, discovered_links, session))
+
+        # Parameter fuzzing with verification
+        if mode == "aggressive":
+            print("  🎯 Fuzzing URL parameters...")
+            for link in discovered_links:
+                reporter.add_findings(fuzz_url_params(link, session=session))
+
+        return reporter.findings
+
+    finally:
+        if session_manager:
+            session_manager.logout()
 
 def test_framework():
     """Test all framework components"""
