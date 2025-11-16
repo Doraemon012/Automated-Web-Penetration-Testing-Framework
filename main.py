@@ -202,9 +202,7 @@ from scanners.sqli import test_sqli
 from scanners.xss import test_xss
 from scanners.misconfig import check_misconfig, check_open_redirect, fuzz_url_params
 from reports.reporter import Reporter
-from reports.risk import enrich_findings
-from reports.cvss_compute import enhance_finding_with_cvss, deduplicate_findings
-import json
+from reports.pipeline import finalize_findings
 import time
 
 def run_complete_scan(target_url, auth_config=None, use_js=False, mode="standard"):
@@ -320,7 +318,8 @@ def run_complete_scan(target_url, auth_config=None, use_js=False, mode="standard
             for link in discovered_links:
                 reporter.add_findings(fuzz_url_params(link, session=session))
 
-        return reporter.findings
+        reporter.finalize()
+        return reporter
 
     finally:
         if session_manager:
@@ -344,13 +343,17 @@ def test_framework():
         print(f"\n🎯 Testing with target: {target}")
         print("-" * 40)
         
+        reporter = None
         try:
             # Test 1: Basic scan
             total_tests += 1
             print("Test 1: Basic vulnerability scan")
-            findings = run_complete_scan(target)
+            reporter = run_complete_scan(target)
+            findings_iter = finalize_findings(reporter.iter_findings())
+            findings = list(findings_iter)
+            reporter.overwrite(findings)
             
-            if findings is not None:
+            if findings:
                 print(f"✅ Scan completed successfully - Found {len(findings)} findings")
                 tests_passed += 1
                 
@@ -393,6 +396,9 @@ def test_framework():
         except Exception as e:
             print(f"❌ Test failed with error: {e}")
             total_tests += 1
+        finally:
+            if reporter:
+                reporter.cleanup()
         
         # Brief pause between tests
         time.sleep(1)
@@ -610,29 +616,24 @@ def main():
     if auth_config:
         print(f"[+] Using {auth_config['type']} authentication")
 
+    reporter = None
     # Run scan with configuration
     try:
-        findings = run_complete_scan(target, auth_config, args.js, mode=args.mode)
-        
-        # Enhanced CVSS scoring pipeline
-        findings = [enhance_finding_with_cvss(f) for f in findings]
-        findings = deduplicate_findings(findings)
-        
-        # Apply CWE mapping from existing risk.py
-        findings = enrich_findings(findings)
+        reporter = run_complete_scan(target, auth_config, args.js, mode=args.mode)
+        findings = finalize_findings(reporter.iter_findings())
+        reporter.overwrite(findings)
+        del findings
 
-        # Save reports
-        reporter = Reporter()
-        reporter.findings = findings
         reporter.save_json()
         reporter.save_markdown()
         
-        print(f"\n[+] Scanning complete! Found {len(findings)} vulnerabilities")
+        total_found = reporter.total_findings
+        print(f"\n[+] Scanning complete! Found {total_found} vulnerabilities")
         print("[+] Reports generated as report.json and report.md")
         
         # Print summary
         severity_counts = {}
-        for finding in findings:
+        for finding in reporter.iter_findings():
             severity = finding.get('severity', 'Unknown')
             severity_counts[severity] = severity_counts.get(severity, 0) + 1
         
@@ -643,6 +644,9 @@ def main():
     except Exception as e:
         print(f"[-] Scan failed: {e}")
         sys.exit(1)
+    finally:
+        if reporter:
+            reporter.cleanup()
 
 if __name__ == "__main__":
     main()

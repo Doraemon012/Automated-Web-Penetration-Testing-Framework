@@ -147,9 +147,27 @@ function updateModeChipState() {
 async function refreshHistory() {
   try {
     const { data } = await callBackground("list_scans", { limit: 6 });
-    renderHistory(data || []);
+    const scans = await Promise.all((data || []).map(updateScanIfStale));
+    renderHistory(scans);
   } catch (error) {
     toast("Cannot load history");
+  }
+}
+
+async function updateScanIfStale(scan) {
+  if (!scan) {
+    return scan;
+  }
+  const status = (scan.status || "").toLowerCase();
+  const terminal = ["completed", "failed", "cancelled", "error"]; // treat anything else as stale
+  if (terminal.includes(status)) {
+    return scan;
+  }
+  try {
+    const { data } = await callBackground("fetch_status", { scanId: scan.scan_id });
+    return data || scan;
+  } catch (error) {
+    return scan;
   }
 }
 

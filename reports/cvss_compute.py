@@ -9,7 +9,7 @@ This module provides advanced CVSS scoring capabilities:
 """
 
 import hashlib
-from typing import Dict, Any
+from typing import Dict, Any, Iterable, Iterator
 # from cvss import CVSS3
 
 try:
@@ -519,7 +519,7 @@ def compute_environmental_adjustment(
     }
 
 
-def deduplicate_findings(findings: list) -> list:
+def deduplicate_findings(findings: Iterable[Dict[str, Any]]) -> Iterator[Dict[str, Any]]:
     """
     Deduplicate findings by canonical ID.
     
@@ -556,7 +556,6 @@ def deduplicate_findings(findings: list) -> list:
             canonical_map[cid]['scanners'].append(finding.get('scanner', 'unknown'))
     
     # Merge each group
-    merged_findings = []
     for cid, data in canonical_map.items():
         merged = data['finding'].copy()
         merged['occurrences'] = data['occurrences']
@@ -568,9 +567,7 @@ def deduplicate_findings(findings: list) -> list:
             base_conf = merged.get('confidence', 0.5)
             merged['confidence'] = min(0.95, base_conf + 0.1)
         
-        merged_findings.append(merged)
-    
-    return merged_findings
+        yield merged
 
 
 def compute_final_priority(

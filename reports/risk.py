@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, Iterable, Iterator
 
 # Simple mappings for CWE by vulnerability name keywords
 VULN_TO_CWE = [
@@ -65,7 +65,8 @@ def enrich_issue(issue: Dict[str, Any]) -> Dict[str, Any]:
         enriched["evidence_summary"] = ev[:240] + "..."
     return enriched
 
-def enrich_findings(findings: list) -> list:
-    return [enrich_issue(f) for f in findings]
+def enrich_findings(findings: Iterable[Dict[str, Any]]) -> Iterator[Dict[str, Any]]:
+    for finding in findings:
+        yield enrich_issue(finding)
 
 

@@ -328,7 +328,11 @@ def start_scan():
 
 @app.route('/api/status')
 def get_status():
-    return jsonify(scan_status)
+    status_snapshot = dict(scan_status)
+    if not status_snapshot.get('running'):
+        status_snapshot['progress'] = 0
+        status_snapshot['current_task'] = status_snapshot.get('current_task') or 'Idle'
+    return jsonify(status_snapshot)
 
 @app.route('/api/results')
 def get_results():
