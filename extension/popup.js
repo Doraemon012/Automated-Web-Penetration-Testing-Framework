@@ -26,21 +26,8 @@ const vulnerabilityAccordion = document.getElementById("vulnerabilityAccordion")
 const prevVulnBtn = document.getElementById("prevVuln");
 const nextVulnBtn = document.getElementById("nextVuln");
 const expandMinimizeBtn = document.getElementById("expandMinimizeBtn");
-const openImmersiveBtn = document.getElementById("openImmersive");
-const immersivePanel = document.getElementById("immersivePanel");
-const immersiveHandle = document.getElementById("immersiveHandle");
-const immersiveSeverity = document.getElementById("immersiveSeverity");
-const immersiveTitle = document.getElementById("immersiveTitle");
-const immersiveMeta = document.getElementById("immersiveMeta");
-const immersiveWhat = document.getElementById("immersiveWhat");
-const immersiveHow = document.getElementById("immersiveHow");
-const immersivePrevention = document.getElementById("immersivePrevention");
-const immersiveOccurrences = document.getElementById("immersiveOccurrences");
-const pinImmersiveBtn = document.getElementById("pinImmersive");
-const closeImmersiveBtn = document.getElementById("closeImmersive");
 const downloadJsonBtn = document.getElementById("downloadJson");
 const downloadMarkdownBtn = document.getElementById("downloadMarkdown");
-const openFloatingBtn = document.getElementById("openFloatingWindow");
 const totalVulnsEl = document.getElementById("totalVulns");
 const highVulnsEl = document.getElementById("highVulns");
 const mediumVulnsEl = document.getElementById("mediumVulns");
@@ -56,11 +43,8 @@ let currentTargetUrl = null;
 let activeTabId = null;
 let latestResult = null;
 let groupedFindings = {};
-let immersiveState = { groupName: null, groupItems: [] };
-let isPanelPinned = false;
 let currentVulnIndex = 0;
 let allVulnGroups = [];
-let immersiveAutoOpened = false;
 
 const vulnerabilityDB = {
   "SQL Injection": {
@@ -297,13 +281,8 @@ async function init() {
   prevVulnBtn.addEventListener("click", () => navigateVuln(-1));
   nextVulnBtn.addEventListener("click", () => navigateVuln(1));
   expandMinimizeBtn.addEventListener("click", toggleExpandMinimize);
-  openImmersiveBtn.addEventListener("click", () => openImmersivePanel());
-  pinImmersiveBtn.addEventListener("click", toggleImmersivePin);
-  closeImmersiveBtn.addEventListener("click", () => closeImmersivePanel(true));
-  makePanelDraggable(immersivePanel, immersiveHandle);
   websiteViewBtn.addEventListener("click", () => switchView("website"));
   analystViewBtn.addEventListener("click", () => switchView("analyst"));
-  // Removed secondary findings window — use in-page Vanguard Findings only
   scanForm.addEventListener("submit", submitScanForm);
   wireModeChips();
   await loadAuthState();
@@ -417,8 +396,6 @@ function switchView(mode = "website") {
   }
 }
 
-// openFindingsWindow removed — the extension now uses only the in-page Vanguard Findings panel.
-
 async function refreshHistory() {
   try {
     const { data } = await callBackground("list_scans", { limit: 6 });
@@ -484,8 +461,6 @@ function renderResult(result) {
 
   latestResult = result;
   chrome.storage.local.set({ floatingResult: latestResult, floatingUpdatedAt: Date.now() });
-  immersiveAutoOpened = false;
-  closeImmersivePanel(true);
 
   const findings = result.findings || [];
   const totalCount = resolveTotalFindings(result, findings);
@@ -530,14 +505,9 @@ function renderResult(result) {
     requestAnimationFrame(() => {
       const firstGroup = allVulnGroups[0];
       showVulnerabilityDetail(firstGroup, 0, groupedFindings[firstGroup]);
-      if (!immersiveAutoOpened) {
-        openImmersivePanel(true);
-        immersiveAutoOpened = true;
-      }
     });
   } else {
     detailContent.innerHTML = '<div class="text-slate-400 text-sm">No vulnerability details available for this scan.</div>';
-    immersiveState = { groupName: null, groupItems: [] };
   }
 
   broadcastFindings(result).catch((error) => {
@@ -889,7 +859,6 @@ function renderAnalystView(findings = []) {
   groupedFindings = {};
   allVulnGroups = [];
   vulnerabilityAccordion.innerHTML = '';
-  immersiveState = { groupName: null, groupItems: [] };
 
   if (!findings.length) {
     vulnerabilityAccordion.innerHTML = '<div class="text-center text-slate-400 py-6">No vulnerabilities were detected during this scan.</div>';
@@ -952,11 +921,6 @@ function showVulnerabilityDetail(groupName, index, groupItems) {
   }
 
   const vulnerabilityInfo = vulnerabilityDB[groupName] || { title: groupName, what: 'No description available.', how: '', prevention: '' };
-  immersiveState = { groupName, groupItems };
-  populateImmersivePanel();
-  if (isPanelPinned && immersivePanel.classList.contains('hidden') === true) {
-    openImmersivePanel(true);
-  }
 
   currentVulnIndex = Number(index);
   allVulnGroups = Object.keys(groupedFindings);
@@ -1087,184 +1051,6 @@ function updateNavButtons() {
   const inFullMode = detailPanel.classList.contains('full-mode');
   prevVulnBtn.classList.toggle('hidden', !inFullMode || currentVulnIndex === 0);
   nextVulnBtn.classList.toggle('hidden', !inFullMode || currentVulnIndex >= allVulnGroups.length - 1);
-}
-
-function openImmersivePanel(autoTrigger = false) {
-  populateImmersivePanel();
-  if (!immersiveState.groupItems?.length && !autoTrigger) {
-    toast('Select a vulnerability to open the immersive view');
-    return;
-  }
-  immersivePanel.classList.remove('hidden');
-}
-
-function closeImmersivePanel(forceClose = false) {
-  if (!forceClose && isPanelPinned) {
-    return;
-  }
-  immersivePanel.classList.add('hidden');
-  immersivePanel.classList.remove('dragging');
-  immersivePanel.style.left = '';
-  immersivePanel.style.top = '';
-  immersivePanel.style.right = '';
-  immersivePanel.style.bottom = '';
-}
-
-function toggleImmersivePin() {
-  isPanelPinned = !isPanelPinned;
-  pinImmersiveBtn.classList.toggle('btn-primary', isPanelPinned);
-  pinImmersiveBtn.classList.toggle('btn-muted', !isPanelPinned);
-  pinImmersiveBtn.textContent = isPanelPinned ? 'Pinned' : 'Pin';
-  pinImmersiveBtn.title = isPanelPinned ? 'Pinned in place' : 'Pin panel';
-}
-
-function makePanelDraggable(panel, handle) {
-  if (!panel || !handle) {
-    return;
-  }
-
-  let isDragging = false;
-  let startX = 0;
-  let startY = 0;
-  let initialX = 0;
-  let initialY = 0;
-
-  const startDrag = (event) => {
-    if (isPanelPinned) {
-      return;
-    }
-    isDragging = true;
-    const pointer = event.touches ? event.touches[0] : event;
-    startX = pointer.clientX;
-    startY = pointer.clientY;
-    const rect = panel.getBoundingClientRect();
-    initialX = rect.left;
-    initialY = rect.top;
-    panel.classList.add('dragging');
-    event.preventDefault();
-  };
-
-  const duringDrag = (event) => {
-    if (!isDragging) {
-      return;
-    }
-    const pointer = event.touches ? event.touches[0] : event;
-    if (event.cancelable) {
-      event.preventDefault();
-    }
-    const deltaX = pointer.clientX - startX;
-    const deltaY = pointer.clientY - startY;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const panelWidth = panel.offsetWidth;
-    const panelHeight = panel.offsetHeight;
-    const clampedX = Math.min(Math.max(0, initialX + deltaX), viewportWidth - panelWidth);
-    const clampedY = Math.min(Math.max(0, initialY + deltaY), viewportHeight - panelHeight);
-    panel.style.left = `${clampedX}px`;
-    panel.style.top = `${clampedY}px`;
-    panel.style.right = 'auto';
-    panel.style.bottom = 'auto';
-  };
-
-  const endDrag = () => {
-    if (!isDragging) {
-      return;
-    }
-    isDragging = false;
-    panel.classList.remove('dragging');
-  };
-
-  handle.addEventListener('mousedown', startDrag);
-  handle.addEventListener('touchstart', startDrag, { passive: false });
-  window.addEventListener('mousemove', duringDrag, { passive: false });
-  window.addEventListener('touchmove', duringDrag, { passive: false });
-  window.addEventListener('mouseup', endDrag);
-  window.addEventListener('touchend', endDrag);
-}
-
-function populateImmersivePanel() {
-  const { groupName, groupItems } = immersiveState;
-  if (!groupName || !groupItems || !groupItems.length) {
-    immersiveTitle.textContent = 'Vulnerability Insight';
-    immersiveSeverity.className = 'badge badge-secondary';
-    immersiveMeta.innerHTML = '<span class="text-slate-400 text-sm">Select a vulnerability to load deep context.</span>';
-    immersiveWhat.textContent = '';
-    immersiveHow.textContent = '';
-    immersivePrevention.textContent = '';
-    immersiveOccurrences.innerHTML = '';
-    return;
-  }
-
-  const info = vulnerabilityDB[groupName] || { title: groupName, what: 'No description available.', how: '', prevention: '' };
-  const lead = groupItems[0];
-  const severityClass = `badge-${severityToBadge(lead.severity)}`;
-  immersiveTitle.textContent = lead.vulnerability || info.title || groupName;
-  immersiveSeverity.className = `badge ${severityClass}`;
-  immersiveSeverity.textContent = lead.severity || 'Info';
-
-  const metaPieces = [];
-  metaPieces.push(`<span class="badge badge-light" title="Unique endpoints">${groupItems.length} endpoint${groupItems.length === 1 ? '' : 's'}</span>`);
-  const hitCount = groupItems.reduce((sum, item) => sum + (item.occurrences || 1), 0);
-  metaPieces.push(`<span class="badge badge-secondary" title="Detections">${hitCount} hit${hitCount === 1 ? '' : 's'}</span>`);
-  if (lead.cvss_base_score) {
-    metaPieces.push(`<span class="badge badge-danger" title="CVSS base score">CVSS ${Number(lead.cvss_base_score).toFixed(1)}</span>`);
-  }
-  if (lead.final_priority) {
-    metaPieces.push(`<span class="badge badge-${severityToBadge(lead.final_priority)}">${escapeHTML(lead.final_priority)}</span>`);
-  }
-  const confidenceDisplay = formatConfidenceValue(lead.confidence);
-  if (confidenceDisplay) {
-    metaPieces.push(`<span class="badge badge-info" title="Detection confidence">${escapeHTML(confidenceDisplay)}</span>`);
-  }
-  if (lead.exploit_published) {
-    metaPieces.push('<span class="badge badge-danger" title="Exploit published">Exploit</span>');
-  }
-  const scannerList = uniqueList(groupItems.map((item) => item.scanners));
-  if (scannerList.length) {
-    metaPieces.push(`<span class="badge badge-dark" title="Scanners">${escapeHTML(scannerList.join(', '))}</span>`);
-  }
-  immersiveMeta.innerHTML = metaPieces.join('');
-
-  immersiveWhat.innerHTML = formatMultiLine(lead.description) || info.what || '';
-  immersiveHow.innerHTML = formatMultiLine(lead.evidence || lead.evidence_merged) || info.how || '';
-  immersivePrevention.innerHTML = formatMultiLine(lead.recommendation) || info.prevention || '';
-  immersiveOccurrences.innerHTML = groupItems.map((item) => renderImmersiveOccurrence(item)).join('') || '<div class="text-slate-400 text-sm">No occurrence data available.</div>';
-}
-
-function renderImmersiveOccurrence(item) {
-  const badges = [];
-  if (item.asset_criticality) {
-    const tone = item.asset_criticality >= 8 ? 'badge-danger' : item.asset_criticality >= 6 ? 'badge-warning' : 'badge-secondary';
-    badges.push(`<span class="badge ${tone}">Asset ${item.asset_criticality}/10</span>`);
-  }
-  const confidenceBadge = formatConfidenceValue(item.confidence);
-  if (confidenceBadge) {
-    badges.push(`<span class="badge badge-info">${escapeHTML(confidenceBadge)}</span>`);
-  }
-  if (item.occurrences > 1) {
-    badges.push(`<span class="badge badge-warning">${item.occurrences} detections</span>`);
-  }
-  if (item.cwe) {
-    badges.push(`<span class="badge badge-secondary">${escapeHTML(item.cwe)}</span>`);
-  }
-
-  return `
-    <div class="immersive-occurrence">
-      <div class="flex justify-between gap-3 mb-2">
-        <div class="flex-1">
-          <div class="text-xs text-slate-400">Endpoint</div>
-          <code>${escapeHTML(item.url || 'Unknown URL')}</code>
-        </div>
-        <div class="text-right">
-          ${item.cvss_base_score ? `<div><span class="badge badge-danger">${Number(item.cvss_base_score).toFixed(1)}</span></div>` : ''}
-          ${item.final_priority ? `<div><span class="badge badge-${severityToBadge(item.final_priority)}">${escapeHTML(item.final_priority)}</span></div>` : ''}
-        </div>
-      </div>
-      ${badges.length ? `<div class="flex flex-wrap gap-2 mb-2">${badges.join('')}</div>` : ''}
-      ${item.payload ? `<div class="mb-2"><strong class="text-xs text-slate-300">Payload</strong><code>${escapeHTML(item.payload)}</code></div>` : ''}
-      ${item.evidence || item.evidence_merged ? `<div><strong class="text-xs text-slate-300">Evidence</strong><code>${escapeHTML(item.evidence || item.evidence_merged)}</code></div>` : ''}
-    </div>
-  `;
 }
 
 function renderAffectedLocationCard(item) {

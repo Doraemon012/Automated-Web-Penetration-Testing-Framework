@@ -119,7 +119,6 @@
               <button type="button" class="btn btn-muted text-xs" id="downloadJson">JSON</button>
               <button type="button" class="btn btn-muted text-xs" id="downloadMarkdown">Markdown</button>
             </div>
-            <button type="button" class="btn btn-warning text-xs" id="openFloatingWindow">Floating View</button>
           </div>
         </div>
 
@@ -180,9 +179,6 @@
                     <span>&larr;</span>
                   </button>
                   <div class="flex gap-2 ml-auto">
-                    <button class="btn btn-muted text-xs" id="openImmersive" title="Open immersive overview">
-                      Immersive
-                    </button>
                     <button class="btn btn-muted text-xs" id="expandMinimizeBtn" title="Expand">
                       Expand
                     </button>
@@ -198,41 +194,7 @@
         </div>
       </section>
 
-      <div id="immersivePanel" class="immersive-panel hidden">
-        <div class="immersive-header" id="immersiveHandle">
-          <div class="immersive-title">
-            <span id="immersiveSeverity" class="badge">Severity</span>
-            <h4 id="immersiveTitle">Vulnerability Insight</h4>
-          </div>
-          <div class="immersive-actions">
-            <button class="btn btn-muted text-xs" id="pinImmersive" title="Pin panel">
-              Pin
-            </button>
-            <button class="btn btn-danger text-xs" id="closeImmersive" title="Close">
-              Close
-            </button>
-          </div>
-        </div>
-        <div class="immersive-body">
-          <div class="immersive-meta" id="immersiveMeta"></div>
-          <div class="immersive-section">
-            <h6>What We Found</h6>
-            <div id="immersiveWhat" class="text-slate-300"></div>
-          </div>
-          <div class="immersive-section">
-            <h6>How It Works</h6>
-            <div id="immersiveHow" class="text-slate-300"></div>
-          </div>
-          <div class="immersive-section">
-            <h6>Remediation</h6>
-            <div id="immersivePrevention" class="text-slate-300"></div>
-          </div>
-          <div class="immersive-section">
-            <h6>Affected Endpoints</h6>
-            <div id="immersiveOccurrences"></div>
-          </div>
-        </div>
-      </div>
+
     </main>
 
     <template id="historyItemTemplate">

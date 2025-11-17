@@ -292,13 +292,13 @@ function injectStyles() {
       right: 1.5rem;
       width: min(480px, 90vw);
       max-height: 85vh;
-      background: linear-gradient(180deg, rgba(8,12,20,0.98), rgba(4,6,10,0.92));
+      background: linear-gradient(180deg, rgba(10,12,16,0.98), rgba(10,12,16,0.95));
       border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      box-shadow: 0 12px 40px rgba(2,6,23,0.7);
-      color: #e6f0fb;
+      border: 1px solid rgba(0, 191, 255, 0.2);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 191, 255, 0.15);
+      color: #e0e0e0;
       font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      backdrop-filter: blur(8px) saturate(120%);
+      backdrop-filter: blur(12px) saturate(120%);
       z-index: 2147483647;
       display: flex;
       flex-direction: column;
@@ -310,161 +310,220 @@ function injectStyles() {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.85rem 1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      gap: 0.5rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(0, 191, 255, 0.2);
+      gap: 0.75rem;
       cursor: move;
       user-select: none;
+      background: rgba(0, 0, 0, 0.2);
     }
     #${PANEL_ID} .floating-title {
       margin: 0;
-      font-size: 1.05rem;
+      font-size: 1.1rem;
       font-weight: 700;
       letter-spacing: 0.01em;
+      color: #0037ffff;
+      text-shadow: 0 0 10px rgba(0, 191, 255, 0.3);
     }
     #${PANEL_ID} .floating-subtitle {
-      margin: 0.15rem 0 0;
-      font-size: 0.78rem;
-      color: rgba(230, 240, 251, 0.75);
+      margin: 0.25rem 0 0;
+      font-size: 0.8rem;
+      color: rgba(224, 224, 224, 0.8);
     }
     #${PANEL_ID} .floating-actions {
       display: flex;
       gap: 0.4rem;
     }
     #${PANEL_ID} .pill-btn {
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.02);
-      color: #dceefc;
-      border-radius: 999px;
-      padding: 0.28rem 0.7rem;
-      font-size: 0.72rem;
+      border: 1px solid rgba(0, 191, 255, 0.2);
+      background: rgba(0, 191, 255, 0.05);
+      color: #e0e0e0;
+      border-radius: 6px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.75rem;
       text-transform: none;
       letter-spacing: 0.02em;
       cursor: pointer;
-      transition: all 0.18s cubic-bezier(.2,.9,.2,1);
+      transition: all 0.2s ease;
+      font-weight: 500;
     }
     #${PANEL_ID} .pill-btn:hover {
       transform: translateY(-1px);
-      border-color: rgba(0,150,255,0.6);
-      color: #dff7ff;
+      border-color: rgba(0, 191, 255, 0.6);
+      background: rgba(0, 191, 255, 0.12);
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
     }
     #${PANEL_ID} .pill-btn.active {
-      border-color: rgba(0,150,255,0.85);
-      background: rgba(0,150,255,0.12);
-      color: #e6f9ff;
+      border-color: #0037ffff;
+      background: rgba(0, 55, 255, 0.15);
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(0, 191, 255, 0.4);
     }
     #${PANEL_ID} .pill-btn.danger {
-      border-color: rgba(255,99,132,0.5);
-      background: rgba(255,99,132,0.08);
-      color: #ffdfe6;
+      border-color: rgba(255, 69, 0, 0.4);
+      background: rgba(255, 69, 0, 0.1);
+      color: #ff4500;
+    }
+    #${PANEL_ID} .pill-btn.danger:hover {
+      background: rgba(255, 69, 0, 0.2);
+      color: #ff6347;
+      box-shadow: 0 0 15px rgba(255, 69, 0, 0.3);
     }
     #${PANEL_ID} .floating-body {
-      padding: 0.9rem 1rem 1rem;
+      padding: 1.25rem;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 0.9rem;
+      gap: 1rem;
     }
     #${PANEL_ID} .floating-summary {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 0.65rem;
+      gap: 0.75rem;
     }
     #${PANEL_ID} .floating-card {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.04);
+      background: rgba(26, 29, 46, 0.7);
+      border: 1px solid rgba(0, 191, 255, 0.2);
       border-radius: 12px;
-      padding: 0.65rem 0.75rem;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.4rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      transition: all 0.2s ease;
+    }
+    #${PANEL_ID} .floating-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px rgba(0, 191, 255, 0.15);
     }
     #${PANEL_ID} .floating-card small {
-      font-size: 0.6rem;
-      letter-spacing: 0.08em;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.55);
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 500;
     }
     #${PANEL_ID} .floating-card strong {
       display: block;
-      font-size: 1.4rem;
+      font-size: 1.85rem;
       margin-top: 0.2rem;
+      color: #e0e0e0;
+      font-family: 'Roboto Mono', monospace;
+      font-weight: 700;
     }
     #${PANEL_ID} .finding-entry {
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(0, 191, 255, 0.2);
       border-radius: 12px;
-      padding: 0.75rem;
-      background: linear-gradient(180deg, rgba(8,10,14,0.6), rgba(6,8,12,0.65));
-      margin-bottom: 0.6rem;
-      box-shadow: 0 8px 20px rgba(3,6,12,0.5);
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      margin-bottom: 0.85rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+      backdrop-filter: blur(10px);
+      transition: all 0.25s ease;
+    }
+    #${PANEL_ID} .finding-entry:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 191, 255, 0.15);
+      border-color: rgba(0, 191, 255, 0.4);
     }
     #${PANEL_ID} .finding-header {
       display: flex;
       justify-content: space-between;
-      gap: 0.75rem;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
     }
     #${PANEL_ID} .finding-header h4 {
-      margin: 0.1rem 0;
-      font-size: 1.02rem;
-      line-height: 1.1;
+      margin: 0.3rem 0;
+      font-size: 1rem;
+      line-height: 1.3;
+      color: #e0e0e0;
+      font-weight: 600;
     }
     #${PANEL_ID} .finding-meta {
-      font-size: 0.78rem;
-      color: rgba(230,240,251,0.7);
+      font-size: 0.75rem;
+      color: rgba(224, 224, 224, 0.7);
+      margin-top: 0.25rem;
     }
     #${PANEL_ID} .badge {
       display: inline-flex;
       align-items: center;
-      padding: 0.15rem 0.55rem;
-      border-radius: 999px;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
       font-size: 0.7rem;
       text-transform: none;
       letter-spacing: 0.02em;
-      border: 1px solid rgba(255,255,255,0.04);
-      background: rgba(255,255,255,0.02);
-      color: #e6f3ff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-weight: 600;
+      white-space: nowrap;
     }
-    #${PANEL_ID} .badge-critical { background: rgba(249,115,22,0.12); color: #ffd9c9; border-color: rgba(249,115,22,0.14); }
-    #${PANEL_ID} .badge-high { background: rgba(251,146,60,0.12); color: #fff1e6; border-color: rgba(251,146,60,0.14); }
-    #${PANEL_ID} .badge-medium { background: rgba(250,204,21,0.08); color: #0b1220; border-color: rgba(250,204,21,0.12); }
-    #${PANEL_ID} .badge-low { background: rgba(56,189,248,0.08); color: #dff7ff; border-color: rgba(56,189,248,0.12); }
-    #${PANEL_ID} .badge-info { background: rgba(168,85,247,0.08); color: #f1e8ff; border-color: rgba(168,85,247,0.12); }
+    #${PANEL_ID} .badge-critical { background: rgba(139, 0, 0, 1); color: #fff; border-color: rgba(139, 0, 0, 0.6); }
+    #${PANEL_ID} .badge-high { background: rgba(255, 69, 0, 0.2); color: #ff4500; border: 1px solid #ff4500; }
+    #${PANEL_ID} .badge-medium { background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid #ffc107; }
+    #${PANEL_ID} .badge-low { background: rgba(32, 201, 151, 0.2); color: #20c997; border: 1px solid #20c997; }
+    #${PANEL_ID} .badge-info { background: rgba(0, 191, 255, 0.2); color: #0037ffff; border: 1px solid #0037ffff; }
     #${PANEL_ID} .finding-body {
-      margin-top: 0.75rem;
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
+      gap: 0.5rem;
       font-size: 0.85rem;
     }
+    #${PANEL_ID} .finding-body small {
+      display: block;
+      text-transform: uppercase;
+      font-size: 0.65rem;
+      color: rgba(255, 255, 255, 0.6);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+    }
     #${PANEL_ID} .finding-body code {
-      background: rgba(10,14,20,0.6);
-      padding: 0.2rem 0.45rem;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 0.5rem;
       border-radius: 6px;
       word-break: break-all;
-      display: inline-block;
-      color: #dff8ff;
-      font-size: 0.82rem;
+      display: block;
+      color: #00FFAB;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 0.25rem;
+    }
+    #${PANEL_ID} .finding-body p {
+      color: #e0e0e0;
+      line-height: 1.5;
+      margin: 0;
     }
     #${PANEL_ID} .text-muted {
-      color: rgba(255, 255, 255, 0.55);
+      color: rgba(224, 224, 224, 0.7);
       font-size: 0.85rem;
     }
     .${OUTLINE_CLASS} {
-      outline: 3px solid rgba(56,189,248,0.95) !important;
+      outline: 3px solid rgba(0, 191, 255, 0.8) !important;
       outline-offset: 3px;
       position: relative;
+      animation: pulseOutline 2s ease-in-out infinite;
+    }
+    @keyframes pulseOutline {
+      0%, 100% { outline-color: rgba(0, 191, 255, 0.8); }
+      50% { outline-color: rgba(0, 55, 255, 1); }
     }
     .${OUTLINE_CLASS}::after {
       content: attr(data-web-pentest-finding);
       position: absolute;
       top: -0.65rem;
       left: 0;
-      background: rgba(6,10,16,0.95);
-      color: rgba(220,247,255,0.98);
-      font-size: 0.68rem;
-      padding: 0.12rem 0.36rem;
-      border-radius: 999px;
-      border: 1px solid rgba(56,189,248,0.22);
+      background: rgba(10, 12, 16, 0.95);
+      color: #0037ffff;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 191, 255, 0.4);
+      font-weight: 600;
+      box-shadow: 0 0 10px rgba(0, 191, 255, 0.3);
     }
   `;
   document.head.appendChild(style);
