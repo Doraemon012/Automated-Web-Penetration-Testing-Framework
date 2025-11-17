@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Findings Window</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/tailwind.css" />
+    <link rel="stylesheet" href="styles/parity.css" />
+    <link rel="stylesheet" href="styles/floating.css" />
+  </head>
+  <body class="floating-shell">
+    <div class="floating-panel" id="floatingPanel">
+      <div class="floating-header" id="floatingHandle">
+        <div>
+          <p class="floating-title">Floating Findings</p>
+          <p class="floating-subtitle" id="floatingTarget">Waiting for data…</p>
+        </div>
+        <div class="floating-actions">
+          <button class="pill-btn" id="pinFloating" title="Pin panel">Pin</button>
+          <button class="pill-btn" id="minFloating" title="Minimize panel">Minimize</button>
+          <button class="pill-btn danger" id="closeFloating" title="Close window">Close</button>
+        </div>
+      </div>
+      <div class="floating-body" id="floatingBody">
+        <section class="floating-summary" id="floatingSummary"></section>
+        <section class="floating-list" id="floatingFindings"></section>
+      </div>
+    </div>
+    <script type="module" src="findings_window.js"></script>
+  </body>
+</html>

@@ -40,6 +40,7 @@ const pinImmersiveBtn = document.getElementById("pinImmersive");
 const closeImmersiveBtn = document.getElementById("closeImmersive");
 const downloadJsonBtn = document.getElementById("downloadJson");
 const downloadMarkdownBtn = document.getElementById("downloadMarkdown");
+const openFloatingBtn = document.getElementById("openFloatingWindow");
 const totalVulnsEl = document.getElementById("totalVulns");
 const highVulnsEl = document.getElementById("highVulns");
 const mediumVulnsEl = document.getElementById("mediumVulns");
@@ -52,6 +53,7 @@ const enhancedMetrics = document.getElementById("enhancedMetrics");
 const STATUS_VARIANTS = ["status-pill-success", "status-pill-warn", "status-pill-danger", "status-pill-info"];
 
 let currentTargetUrl = null;
+let activeTabId = null;
 let latestResult = null;
 let groupedFindings = {};
 let immersiveState = { groupName: null, groupItems: [] };
@@ -301,6 +303,7 @@ async function init() {
   makePanelDraggable(immersivePanel, immersiveHandle);
   websiteViewBtn.addEventListener("click", () => switchView("website"));
   analystViewBtn.addEventListener("click", () => switchView("analyst"));
+  // Removed secondary findings window — use in-page Vanguard Findings only
   scanForm.addEventListener("submit", submitScanForm);
   wireModeChips();
   await loadAuthState();
@@ -336,6 +339,7 @@ function toggleSection(section, enabled) {
 async function handleLogout() {
   await callBackground("logout");
   resultSection.classList.add("hidden");
+  chrome.storage.local.remove(["floatingResult", "floatingUpdatedAt"]);
 }
 
 async function submitScanForm(event) {
@@ -362,9 +366,11 @@ async function submitScanForm(event) {
 async function hydrateTargetContext() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tab?.url) {
+    activeTabId = tab.id || null;
     currentTargetUrl = tab.url;
     currentUrlBadge.textContent = new URL(tab.url).hostname;
   } else {
+    activeTabId = null;
     currentUrlBadge.textContent = "Grant tab access";
   }
 }
@@ -410,6 +416,8 @@ function switchView(mode = "website") {
     websiteViewBtn?.classList.add("active");
   }
 }
+
+// openFindingsWindow removed — the extension now uses only the in-page Vanguard Findings panel.
 
 async function refreshHistory() {
   try {
@@ -464,7 +472,6 @@ async function viewResult(scanId) {
     const { data } = await callBackground("fetch_results", { scanId });
     latestResult = data;
     renderResult(data);
-    await broadcastFindings(data);
   } catch (error) {
     toast(error.message || "Result unavailable");
   }
@@ -476,7 +483,7 @@ function renderResult(result) {
   }
 
   latestResult = result;
-  resultSection.classList.remove("hidden");
+  chrome.storage.local.set({ floatingResult: latestResult, floatingUpdatedAt: Date.now() });
   immersiveAutoOpened = false;
   closeImmersivePanel(true);
 
@@ -532,6 +539,19 @@ function renderResult(result) {
     detailContent.innerHTML = '<div class="text-slate-400 text-sm">No vulnerability details available for this scan.</div>';
     immersiveState = { groupName: null, groupItems: [] };
   }
+
+  broadcastFindings(result).catch((error) => {
+    console.warn("Unable to relay findings to page", error);
+  });
+}
+
+async function resolveActiveTabId() {
+  if (activeTabId) {
+    return activeTabId;
+  }
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  activeTabId = tab?.id || null;
+  return activeTabId;
 }
 
 function severityColor(level) {
@@ -623,10 +643,16 @@ function renderSeverityBadges(counts) {
 }
 
 async function broadcastFindings(result) {
-  const findings = (result.findings || []).slice(0, 50);
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab?.id) return;
-  chrome.tabs.sendMessage(tab.id, { type: "render_findings", payload: { target: result.target_url, findings } });
+  if (!result) {
+    return;
+  }
+  const tabId = await resolveActiveTabId();
+  if (!tabId) {
+    return;
+  }
+  const findings = Array.isArray(result.findings) ? result.findings : [];
+  const target = result.target_url || currentTargetUrl || "Unknown target";
+  chrome.tabs.sendMessage(tabId, { type: "render_findings", payload: { target, findings } });
 }
 
 function renderScanStatus(status) {

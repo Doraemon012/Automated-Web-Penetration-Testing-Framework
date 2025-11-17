@@ -1,12 +1,17 @@
 :root {
-  --primary-accent: #00bfff;
+  --primary-accent: #0037ff;
   --background-dark: #0a0c10;
   --border-color: rgba(0, 191, 255, 0.2);
-  --card-bg: rgba(10, 12, 16, 0.7);
+  --card-bg: rgba(26, 29, 46, 0.7);
   --text-light: #e0e0e0;
   --high-sev: #ff4500;
   --medium-sev: #ffc107;
   --low-sev: #20c997;
+  --glow-shadow: 0 0 15px rgba(0, 191, 255, 0.5);
+}
+
+.popup-shell {
+  min-width: 430px;
 }
 
 .result-summary-grid {
@@ -19,12 +24,13 @@
 .summary-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(10px);
 }
 
 .summary-label {
@@ -35,9 +41,10 @@
 }
 
 .summary-value {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 600;
   color: var(--text-light);
+  font-family: "Roboto Mono", monospace;
 }
 
 .summary-value.text-high { color: var(--high-sev); }
@@ -58,11 +65,13 @@
 .metric-success .summary-value { color: #fff; }
 
 .result-panel {
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 10px;
+  padding: 1.25rem;
   margin-bottom: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(10px);
 }
 
 .view-panels {
@@ -72,17 +81,20 @@
 .website-findings-wrapper {
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
 }
 
 .vulnerability-container {
   display: flex;
   height: 520px;
+  position: relative;
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
 }
 
 .vulnerability-list-panel {
@@ -96,7 +108,8 @@
   width: 50%;
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.35);
+  border-left: 2px solid var(--border-color);
 }
 
 .vulnerability-detail-panel.full-mode {
@@ -104,8 +117,9 @@
 }
 
 .detail-header-controls {
-  padding: 0.75rem 1rem;
+  padding: 0.65rem 1.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -113,28 +127,30 @@
 
 .detail-content {
   flex: 1;
-  padding: 1rem;
+  padding: 1.25rem;
   overflow-y: auto;
 }
 
 .vuln-list-item {
   border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 0.85rem;
+  border-radius: 8px;
+  padding: 0.95rem 1.25rem;
   margin-bottom: 0.75rem;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  transition: transform 0.2s ease, border 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .vuln-list-item:hover {
+  background: rgba(0, 191, 255, 0.1);
   border-color: var(--primary-accent);
-  transform: translateX(4px);
+  transform: translateX(5px);
+  box-shadow: 0 4px 15px rgba(0, 191, 255, 0.2);
 }
 
 .vuln-list-item.active {
   border-left: 4px solid var(--primary-accent);
-  background: rgba(0, 191, 255, 0.1);
+  background: rgba(0, 191, 255, 0.15);
 }
 
 .severity-pill {
@@ -226,11 +242,11 @@
 .badge-success { background: #198754; }
 
 .affected-card {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 0.9rem;
-  margin-bottom: 0.75rem;
-  background: rgba(0, 0, 0, 0.25);
+  padding: 1rem;
+  margin-bottom: 0.9rem;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .meta-chip {
@@ -254,10 +270,10 @@
 }
 
 .mini-stat {
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1rem;
 }
 
 .mini-stat .label {
@@ -268,16 +284,19 @@
 }
 
 .mini-stat .value {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #fff;
 }
 
 .payload-pill {
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
-  padding: 0.25rem 0.65rem;
-  font-size: 0.75rem;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -292,7 +311,8 @@
   border-radius: 999px;
   padding: 0.2rem 0.8rem;
   font-size: 0.75rem;
-  color: #fff;
+  color: #e0e0e0;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 @media (max-width: 768px) {
