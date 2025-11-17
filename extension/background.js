@@ -117,7 +117,34 @@ async function apiFetch(path, { method = "GET", body, headers = {}, requiresAuth
 
   if (!response.ok) {
     const detail = await safeReadJson(response);
-    const message = detail?.detail || response.statusText;
+    let message = response.statusText;
+    
+    if (detail) {
+      if (typeof detail.detail === 'string') {
+        message = detail.detail;
+      } else if (detail.detail && Array.isArray(detail.detail)) {
+        // Handle FastAPI validation errors array
+        const errors = detail.detail.map(err => {
+          if (err.msg) return err.msg;
+          if (err.message) return err.message;
+          if (err.loc && err.loc.length > 0) {
+            const field = err.loc[err.loc.length - 1];
+            return `${field}: ${err.msg || 'validation error'}`;
+          }
+          return JSON.stringify(err);
+        });
+        message = errors.join(', ');
+      } else if (detail.message) {
+        message = detail.message;
+      } else if (typeof detail === 'string') {
+        message = detail;
+      } else {
+        // Handle object errors by extracting meaningful info
+        console.error('Unparsed API error detail:', detail);
+        message = 'Request validation failed';
+      }
+    }
+    
     throw new Error(`API error ${response.status}: ${message}`);
   }
 
@@ -136,11 +163,29 @@ async function safeReadJson(response) {
 }
 
 async function registerUser(payload) {
-  await apiFetch("/api/auth/register", {
-    method: "POST",
-    body: JSON.stringify(payload),
-    requiresAuth: false,
-  });
+  console.log('Registering user with payload:', { email: payload.email, passwordLength: payload.password?.length });
+  
+  // Validate payload before sending
+  if (!payload.email || !payload.email.includes('@')) {
+    throw new Error('Valid email address required');
+  }
+  
+  if (!payload.password || payload.password.length < 8) {
+    throw new Error('Password must be at least 8 characters');
+  }
+  
+  try {
+    const result = await apiFetch("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      requiresAuth: false,
+    });
+    console.log('Registration successful:', result);
+    return result;
+  } catch (error) {
+    console.error('Registration failed:', error);
+    throw error;
+  }
 }
 
 function decodeJwt(token) {
@@ -155,16 +200,23 @@ function decodeJwt(token) {
 }
 
 async function loginUser(payload) {
-  const result = await apiFetch("/api/auth/login", {
-    method: "POST",
-    body: JSON.stringify(payload),
-    requiresAuth: false,
-  });
-  const decoded = decodeJwt(result.access_token);
-  const expiresAt = decoded?.exp ? decoded.exp * 1000 : Date.now() + 1000 * 60 * 60;
-  cacheAuthState({ email: payload.email, token: result.access_token, expiresAt });
-  notifyClients({ type: "auth_changed", payload: authState });
-  return result;
+  console.log('Logging in user with payload:', payload);
+  try {
+    const result = await apiFetch("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      requiresAuth: false,
+    });
+    const decoded = decodeJwt(result.access_token);
+    const expiresAt = decoded?.exp ? decoded.exp * 1000 : Date.now() + 1000 * 60 * 60;
+    cacheAuthState({ email: payload.email, token: result.access_token, expiresAt });
+    notifyClients({ type: "auth_changed", payload: authState });
+    console.log('Login successful');
+    return result;
+  } catch (error) {
+    console.error('Login failed:', error);
+    throw error;
+  }
 }
 
 async function startScan({ url, mode, useJs, authConfig }) {
@@ -323,6 +375,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           break;
         case "health_check":
           respond(await healthCheck(payload));
+          break;
+        case "test_registration":
+          // Test endpoint for debugging
+          try {
+            const settings = await getSettings();
+            console.log('Current settings:', settings);
+            console.log('Testing API connectivity...');
+            await healthCheck();
+            respond({ message: "API connectivity test successful" });
+          } catch (error) {
+            console.error('API test failed:', error);
+            respond({ message: `API test failed: ${error.message}` }, true);
+          }
           break;
         default:
           respond({ message: "Unknown message" }, true);

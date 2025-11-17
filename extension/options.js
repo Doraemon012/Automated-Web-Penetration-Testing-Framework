@@ -9,6 +9,7 @@ const optionsAuthForm = document.getElementById("optionsAuthForm");
 const optionsRegisterBtn = document.getElementById("optionsRegisterBtn");
 const optionsLogoutBtn = document.getElementById("optionsLogoutBtn");
 const optionsAuthStatus = document.getElementById("optionsAuthStatus");
+const testApiBtn = document.getElementById("testApiBtn");
 const authLockedSections = document.querySelectorAll("[data-auth-locked]");
 
 const SCHEDULE_KEY = "scanSchedules";
@@ -33,6 +34,7 @@ async function init() {
   optionsAuthForm?.addEventListener("submit", submitAuthLogin);
   optionsRegisterBtn?.addEventListener("click", submitAuthRegister);
   optionsLogoutBtn?.addEventListener("click", submitAuthLogout);
+  testApiBtn?.addEventListener("click", testApiConnection);
 }
 
 async function loadAuthState() {
@@ -69,10 +71,25 @@ function toggleAuthLockedSections(enabled) {
 async function submitAuthLogin(event) {
   event.preventDefault();
   const formData = new FormData(optionsAuthForm);
-  const payload = {
-    email: formData.get("email"),
-    password: formData.get("password"),
-  };
+  const email = formData.get("email");
+  const password = formData.get("password");
+  
+  if (!email || !email.includes('@')) {
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = "Please enter a valid email address";
+    }
+    return;
+  }
+  
+  if (!password || password.length < 8) {
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = "Password must be at least 8 characters";
+    }
+    return;
+  }
+  
+  const payload = { email: email.trim(), password };
+  
   try {
     if (optionsAuthStatus) {
       optionsAuthStatus.textContent = "Signing in...";
@@ -80,6 +97,7 @@ async function submitAuthLogin(event) {
     await callBackground("login", payload);
     optionsAuthForm.reset();
   } catch (error) {
+    console.error('Login error:', error);
     if (optionsAuthStatus) {
       optionsAuthStatus.textContent = error.message || "Login failed";
     }
@@ -89,16 +107,36 @@ async function submitAuthLogin(event) {
 async function submitAuthRegister(event) {
   event.preventDefault();
   const formData = new FormData(optionsAuthForm);
-  const payload = {
-    email: formData.get("email"),
-    password: formData.get("password"),
-  };
+  const email = formData.get("email");
+  const password = formData.get("password");
+  
+  // Validate input before sending
+  if (!email || !email.includes('@')) {
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = "Please enter a valid email address";
+    }
+    return;
+  }
+  
+  if (!password || password.length < 8) {
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = "Password must be at least 8 characters";
+    }
+    return;
+  }
+  
+  const payload = { email: email.trim(), password };
+  
   try {
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = "Creating account...";
+    }
     await callBackground("register", payload);
     if (optionsAuthStatus) {
       optionsAuthStatus.textContent = "Registration successful. Sign in to continue.";
     }
   } catch (error) {
+    console.error('Registration error:', error);
     if (optionsAuthStatus) {
       optionsAuthStatus.textContent = error.message || "Registration failed";
     }
@@ -111,6 +149,23 @@ async function submitAuthLogout() {
   } catch (error) {
     if (optionsAuthStatus) {
       optionsAuthStatus.textContent = error.message || "Logout failed";
+    }
+  }
+}
+
+async function testApiConnection() {
+  try {
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = "Testing API connection...";
+    }
+    await callBackground("test_registration");
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = "API connection test successful ✓";
+    }
+  } catch (error) {
+    console.error('API test failed:', error);
+    if (optionsAuthStatus) {
+      optionsAuthStatus.textContent = `API test failed: ${error.message}`;
     }
   }
 }

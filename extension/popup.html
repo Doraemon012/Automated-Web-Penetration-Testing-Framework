@@ -109,13 +109,22 @@
             <h2>Latest result</h2>
             <p>Severity breakdown and quick export.</p>
           </div>
-          <button id="downloadReport" class="btn btn-muted text-xs">Download JSON</button>
+          <div class="flex gap-2">
+            <div class="btn-group btn-group-sm view-toggle" role="group">
+              <button type="button" class="btn btn-muted text-xs active" id="website-view-btn">Website View</button>
+              <button type="button" class="btn btn-muted text-xs" id="summary-view-btn">Summary</button>
+            </div>
+            <button id="downloadReport" class="btn btn-muted text-xs">Download JSON</button>
+          </div>
         </div>
-        <div id="resultSummary" class="result-panel text-sm"></div>
-        <div>
-          <h3 class="text-xs uppercase tracking-wide text-slate-400 mb-2">Severity mix</h3>
-          <div id="severityBadges" class="flex flex-wrap gap-2"></div>
+        <div id="summaryView">
+          <div id="resultSummary" class="result-panel text-sm"></div>
+          <div>
+            <h3 class="text-xs uppercase tracking-wide text-slate-400 mb-2">Severity mix</h3>
+            <div id="severityBadges" class="flex flex-wrap gap-2"></div>
+          </div>
         </div>
+        <div id="websiteFindingsView" class="website-findings-wrapper"></div>
       </section>
     </main>
 

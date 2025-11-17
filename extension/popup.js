@@ -16,6 +16,10 @@ const openOptionsBtn = document.getElementById("openOptions");
 const currentUrlBadge = document.getElementById("currentUrl");
 const modeChips = document.querySelectorAll(".mode-chip");
 const authLockedSections = document.querySelectorAll("[data-auth-locked]");
+const websiteViewBtn = document.getElementById("website-view-btn");
+const summaryViewBtn = document.getElementById("summary-view-btn");
+const summaryView = document.getElementById("summaryView");
+const websiteFindingsView = document.getElementById("websiteFindingsView");
 const STATUS_VARIANTS = ["status-pill-success", "status-pill-warn", "status-pill-danger", "status-pill-info"];
 let currentTargetUrl = null;
 
@@ -43,6 +47,7 @@ async function init() {
   await loadAuthState();
   await hydrateTargetContext();
   wireModeChips();
+  wireViewToggle();
   await refreshHistory();
 }
 
@@ -144,6 +149,25 @@ function updateModeChipState() {
   });
 }
 
+function wireViewToggle() {
+  websiteViewBtn?.addEventListener('click', () => switchView('website'));
+  summaryViewBtn?.addEventListener('click', () => switchView('summary'));
+}
+
+function switchView(viewMode) {
+  if (viewMode === 'summary') {
+    websiteFindingsView.style.display = 'none';
+    summaryView.style.display = 'block';
+    summaryViewBtn.classList.add('active');
+    websiteViewBtn.classList.remove('active');
+  } else {
+    summaryView.style.display = 'none';
+    websiteFindingsView.style.display = 'flex';
+    websiteViewBtn.classList.add('active');
+    summaryViewBtn.classList.remove('active');
+  }
+}
+
 async function refreshHistory() {
   try {
     const { data } = await callBackground("list_scans", { limit: 6 });
@@ -206,6 +230,7 @@ async function viewResult(scanId) {
 function renderResult(result) {
   if (!result) return;
   resultSection.classList.remove("hidden");
+  console.log("renderResult called with:", result); // Debug log
   const completed = result.completed_at
     ? new Date(result.completed_at).toLocaleString()
     : "Processing";
@@ -224,6 +249,9 @@ function renderResult(result) {
     badge.textContent = `${key}: ${value}`;
     severityBadges.appendChild(badge);
   });
+  console.log("About to call renderWebsiteFindings with findings:", result.findings); // Debug log
+  renderWebsiteFindings(result.findings || [], result);
+  switchView('website');
 }
 
 function severityColor(level) {
@@ -305,4 +333,176 @@ function statusClass(status) {
 function formatStatus(status) {
   const normalized = (status || "").toLowerCase().replace(/_/g, " ");
   return normalized.replace(/(^|\s)\S/g, (match) => match.toUpperCase()) || "Unknown";
+}
+
+function renderWebsiteFindings(findings, result) {
+  console.log("renderWebsiteFindings called", { findings, result, websiteFindingsView }); // Debug log
+  if (!websiteFindingsView) return;
+  if (!findings || findings.length === 0) {
+    websiteFindingsView.innerHTML = '<div class="text-center p-4 text-slate-400"><p>No vulnerabilities detected for this target.</p></div>';
+    return;
+  }
+
+  const targetDisplay = escapeHTML(result.target_url || 'Scanned Target');
+  const modeDisplay = escapeHTML(String(result.mode || 'Unknown').toUpperCase());
+  const severitySummary = findings.reduce((acc, item) => {
+    const key = (item.severity || 'Info').toLowerCase();
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const summaryChips = ['critical', 'high', 'medium', 'low'].map(level => {
+    if (!severitySummary[level]) return '';
+    return `<span class="website-tag">${level.charAt(0).toUpperCase() + level.slice(1)}: ${severitySummary[level]}</span>`;
+  }).join('');
+
+  const cardsHtml = findings.map((finding, idx) => renderWebsiteFindingCard(finding, idx)).join('');
+  websiteFindingsView.innerHTML = `
+    <div class="website-findings-header">
+      <div>
+        <small>Findings (${findings.length})</small>
+        <h4>${targetDisplay}</h4>
+        <div class="text-slate-400">Mode: ${modeDisplay}</div>
+      </div>
+      <div class="text-right">
+        ${summaryChips || '<span class="text-slate-400">Awaiting severity breakdown...</span>'}
+      </div>
+    </div>
+    <div class="website-findings-cards">
+      ${cardsHtml}
+    </div>
+  `;
+}
+
+function renderWebsiteFindingCard(finding, index) {
+  const severity = finding.severity || 'Info';
+  const severityClass = websiteSeverityClass(severity);
+  const cvssScore = parseScore(finding.cvss_base_score ?? finding.cvss_score);
+  const confidenceLabel = formatConfidence(finding.confidence);
+  const details = [];
+  
+  details.push(`
+    <div class="detail-block">
+      <small>Endpoint</small>
+      <code>${escapeHTML(finding.url || 'N/A')}</code>
+    </div>
+  `);
+  details.push(`
+    <div class="detail-block">
+      <small>Description</small>
+      <p>${escapeHTML(finding.description || 'No description available.')}</p>
+    </div>
+  `);
+  if (finding.payload) {
+    details.push(`
+      <div class="detail-block">
+        <small>Payload</small>
+        <code>${escapeHTML(finding.payload)}</code>
+      </div>
+    `);
+  }
+  if (finding.evidence) {
+    details.push(`
+      <div class="detail-block">
+        <small>Evidence</small>
+        <p>${escapeHTML(truncateText(finding.evidence, 150))}</p>
+      </div>
+    `);
+  }
+  if (finding.recommendation) {
+    details.push(`
+      <div class="detail-block">
+        <small>Recommendation</small>
+        <p>${escapeHTML(truncateText(finding.recommendation, 150))}</p>
+      </div>
+    `);
+  }
+  if (cvssScore !== null) {
+    details.push(`
+      <div class="detail-block">
+        <small>CVSS Score</small>
+        <p class="mb-1">${cvssScore.toFixed(1)}</p>
+        ${finding.cvss_vector ? `<code>${escapeHTML(finding.cvss_vector)}</code>` : ''}
+      </div>
+    `);
+  }
+  if (finding.cwe) {
+    details.push(`
+      <div class="detail-block">
+        <small>CWE</small>
+        <code>${escapeHTML(finding.cwe)}</code>
+      </div>
+    `);
+  }
+
+  const tags = [];
+  if (finding.final_priority) {
+    tags.push(`<span class="website-tag">Priority: ${escapeHTML(finding.final_priority)}</span>`);
+  }
+  if (finding.asset_criticality) {
+    tags.push(`<span class="website-tag">Asset: ${escapeHTML(String(finding.asset_criticality))}</span>`);
+  }
+  if (finding.exploit_published) {
+    tags.push('<span class="website-tag">Known Exploit</span>');
+  }
+  if (finding.occurrences && finding.occurrences > 1) {
+    tags.push(`<span class="website-tag">${finding.occurrences} detections</span>`);
+  }
+
+  return `
+    <div class="website-finding-card">
+      <div class="website-finding-header">
+        <div>
+          <small class="text-slate-400">Finding #${index + 1}</small>
+          <h5>${escapeHTML(finding.vulnerability || 'Unnamed Finding')}</h5>
+          <div class="website-finding-meta">
+            ${escapeHTML(severity)} • ${escapeHTML(confidenceLabel)}${cvssScore !== null ? ` • CVSS ${cvssScore.toFixed(1)}` : ''}
+          </div>
+        </div>
+        <span class="website-badge ${severityClass}">${escapeHTML(severity)}</span>
+      </div>
+      <div class="website-finding-body">
+        ${details.join('')}
+      </div>
+      ${tags.length ? `<div class="website-tag-row">${tags.join('')}</div>` : ''}
+    </div>
+  `;
+}
+
+function websiteSeverityClass(severity = '') {
+  const normalized = severity.toLowerCase();
+  if (normalized === 'critical' || normalized === 'high') return 'high';
+  if (normalized === 'medium') return 'medium';
+  if (normalized === 'low') return 'low';
+  return 'info';
+}
+
+function parseScore(value) {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? null : parsed;
+  }
+  return null;
+}
+
+function truncateText(text, limit = 150) {
+  if (!text) return '';
+  if (text.length <= limit) return text;
+  return `${text.substring(0, limit)}...`;
+}
+
+function formatConfidence(confidence) {
+  if (typeof confidence === 'number') {
+    return `${(confidence * 100).toFixed(0)}% confidence`;
+  }
+  if (typeof confidence === 'string' && confidence.trim() !== '') {
+    return confidence;
+  }
+  return 'Confidence N/A';
+}
+
+function escapeHTML(text) {
+  const div = document.createElement('div');
+  div.textContent = text || '';
+  return div.innerHTML;
 }

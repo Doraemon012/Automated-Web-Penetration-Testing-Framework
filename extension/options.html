@@ -29,14 +29,17 @@
           <span id="optionsAuthStatus" class="status-pill">Signed out</span>
         </div>
         <form id="optionsAuthForm" class="form-grid">
-          <input type="email" name="email" placeholder="Email" class="input" required />
-          <input type="password" name="password" placeholder="Password" class="input" required />
+          <input type="email" name="email" placeholder="Email (min 8 char password)" class="input" required />
+          <input type="password" name="password" placeholder="Password (minimum 8 characters)" class="input" required />
           <div class="flex gap-2">
             <button type="submit" class="btn btn-primary flex-1">Sign In</button>
             <button type="button" id="optionsRegisterBtn" class="btn btn-muted">Register</button>
           </div>
         </form>
-        <button id="optionsLogoutBtn" class="btn btn-danger hidden">Sign Out</button>
+        <div class="flex gap-2 mt-2">
+          <button id="optionsLogoutBtn" class="btn btn-danger hidden">Sign Out</button>
+          <button type="button" id="testApiBtn" class="btn btn-outline">Test API Connection</button>
+        </div>
       </section>
 
       <section class="step-card">
