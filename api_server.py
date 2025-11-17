@@ -80,6 +80,38 @@ if MONGO_URI and MONGO_DB_NAME:
         logger.error("Failed to initialize MongoDB user repository: %s", exc)
 else:
     logger.info("MongoDB persistence disabled (missing configuration)")
+
+
+class InMemoryUserRepository:
+    """Minimal dev-grade repository used when MongoDB is unavailable."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._users: Dict[str, Dict[str, Any]] = {}
+
+    def create_user(self, email: str, hashed_password: str) -> Dict[str, Any]:
+        normalized = email.lower()
+        with self._lock:
+            if normalized in self._users:
+                raise ValueError("Email already exists")
+            self._users[normalized] = {"email": normalized, "hashed_password": hashed_password}
+        return {"email": normalized}
+
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        normalized = email.lower()
+        with self._lock:
+            user = self._users.get(normalized)
+            return dict(user) if user else None
+
+    def email_exists(self, email: str) -> bool:
+        normalized = email.lower()
+        with self._lock:
+            return normalized in self._users
+
+
+if USER_REPOSITORY is None:
+    USER_REPOSITORY = InMemoryUserRepository()
+    logger.warning("Using in-memory user repository; credentials reset on restart")
 SERVICE_STARTED_AT = datetime.utcnow()
 
 # ---------------------------------------------------------------------------

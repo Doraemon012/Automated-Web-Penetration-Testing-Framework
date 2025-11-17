@@ -9,7 +9,6 @@ const optionsAuthForm = document.getElementById("optionsAuthForm");
 const optionsRegisterBtn = document.getElementById("optionsRegisterBtn");
 const optionsLogoutBtn = document.getElementById("optionsLogoutBtn");
 const optionsAuthStatus = document.getElementById("optionsAuthStatus");
-const testApiBtn = document.getElementById("testApiBtn");
 const authLockedSections = document.querySelectorAll("[data-auth-locked]");
 
 const SCHEDULE_KEY = "scanSchedules";
@@ -34,7 +33,6 @@ async function init() {
   optionsAuthForm?.addEventListener("submit", submitAuthLogin);
   optionsRegisterBtn?.addEventListener("click", submitAuthRegister);
   optionsLogoutBtn?.addEventListener("click", submitAuthLogout);
-  testApiBtn?.addEventListener("click", testApiConnection);
 }
 
 async function loadAuthState() {
@@ -68,22 +66,31 @@ function toggleAuthLockedSections(enabled) {
   });
 }
 
+function collectSettingsOverrides() {
+  if (!settingsForm) {
+    return null;
+  }
+  const overrides = {};
+  const apiBaseUrl = settingsForm.apiBaseUrl?.value?.trim();
+  const apiKey = settingsForm.apiKey?.value?.trim();
+  if (apiBaseUrl) {
+    overrides.apiBaseUrl = apiBaseUrl;
+  }
+  if (apiKey) {
+    overrides.apiKey = apiKey;
+  }
+  return Object.keys(overrides).length ? overrides : null;
+}
+
 async function submitAuthLogin(event) {
   event.preventDefault();
   const formData = new FormData(optionsAuthForm);
   const email = formData.get("email");
   const password = formData.get("password");
   
-  if (!email || !email.includes('@')) {
+  if (!email || !password) {
     if (optionsAuthStatus) {
-      optionsAuthStatus.textContent = "Please enter a valid email address";
-    }
-    return;
-  }
-  
-  if (!password || password.length < 8) {
-    if (optionsAuthStatus) {
-      optionsAuthStatus.textContent = "Password must be at least 8 characters";
+      optionsAuthStatus.textContent = "Please enter both email and password";
     }
     return;
   }
@@ -94,7 +101,8 @@ async function submitAuthLogin(event) {
     if (optionsAuthStatus) {
       optionsAuthStatus.textContent = "Signing in...";
     }
-    await callBackground("login", payload);
+    const overrides = collectSettingsOverrides();
+    await callBackground("login", payload, overrides);
     optionsAuthForm.reset();
   } catch (error) {
     console.error('Login error:', error);
@@ -118,9 +126,9 @@ async function submitAuthRegister(event) {
     return;
   }
   
-  if (!password || password.length < 8) {
+  if (!password || password.length < 6) {
     if (optionsAuthStatus) {
-      optionsAuthStatus.textContent = "Password must be at least 8 characters";
+      optionsAuthStatus.textContent = "Password must be at least 6 characters";
     }
     return;
   }
@@ -131,7 +139,8 @@ async function submitAuthRegister(event) {
     if (optionsAuthStatus) {
       optionsAuthStatus.textContent = "Creating account...";
     }
-    await callBackground("register", payload);
+    const overrides = collectSettingsOverrides();
+    await callBackground("register", payload, overrides);
     if (optionsAuthStatus) {
       optionsAuthStatus.textContent = "Registration successful. Sign in to continue.";
     }
@@ -149,23 +158,6 @@ async function submitAuthLogout() {
   } catch (error) {
     if (optionsAuthStatus) {
       optionsAuthStatus.textContent = error.message || "Logout failed";
-    }
-  }
-}
-
-async function testApiConnection() {
-  try {
-    if (optionsAuthStatus) {
-      optionsAuthStatus.textContent = "Testing API connection...";
-    }
-    await callBackground("test_registration");
-    if (optionsAuthStatus) {
-      optionsAuthStatus.textContent = "API connection test successful ✓";
-    }
-  } catch (error) {
-    console.error('API test failed:', error);
-    if (optionsAuthStatus) {
-      optionsAuthStatus.textContent = `API test failed: ${error.message}`;
     }
   }
 }
@@ -275,9 +267,9 @@ function renderSchedules(schedules) {
   });
 }
 
-function callBackground(type, payload) {
+function callBackground(type, payload, overrides = null) {
   return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type, payload }, (response) => {
+    chrome.runtime.sendMessage({ type, payload, overrides }, (response) => {
       if (chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message));
         return;

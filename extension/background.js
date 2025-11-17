@@ -123,25 +123,15 @@ async function apiFetch(path, { method = "GET", body, headers = {}, requiresAuth
       if (typeof detail.detail === 'string') {
         message = detail.detail;
       } else if (detail.detail && Array.isArray(detail.detail)) {
-        // Handle FastAPI validation errors array
-        const errors = detail.detail.map(err => {
-          if (err.msg) return err.msg;
-          if (err.message) return err.message;
-          if (err.loc && err.loc.length > 0) {
-            const field = err.loc[err.loc.length - 1];
-            return `${field}: ${err.msg || 'validation error'}`;
-          }
-          return JSON.stringify(err);
-        });
-        message = errors.join(', ');
+        // Handle validation errors array
+        message = detail.detail.map(err => err.msg || err.message || JSON.stringify(err)).join(', ');
       } else if (detail.message) {
         message = detail.message;
       } else if (typeof detail === 'string') {
         message = detail;
       } else {
         // Handle object errors by extracting meaningful info
-        console.error('Unparsed API error detail:', detail);
-        message = 'Request validation failed';
+        message = JSON.stringify(detail);
       }
     }
     
@@ -162,23 +152,14 @@ async function safeReadJson(response) {
   }
 }
 
-async function registerUser(payload) {
-  console.log('Registering user with payload:', { email: payload.email, passwordLength: payload.password?.length });
-  
-  // Validate payload before sending
-  if (!payload.email || !payload.email.includes('@')) {
-    throw new Error('Valid email address required');
-  }
-  
-  if (!payload.password || payload.password.length < 8) {
-    throw new Error('Password must be at least 8 characters');
-  }
-  
+async function registerUser(payload, overrides = null) {
+  console.log('Registering user with payload:', payload);
   try {
     const result = await apiFetch("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(payload),
       requiresAuth: false,
+      overrideSettings: overrides,
     });
     console.log('Registration successful:', result);
     return result;
@@ -199,13 +180,14 @@ function decodeJwt(token) {
   }
 }
 
-async function loginUser(payload) {
+async function loginUser(payload, overrides = null) {
   console.log('Logging in user with payload:', payload);
   try {
     const result = await apiFetch("/api/auth/login", {
       method: "POST",
       body: JSON.stringify(payload),
       requiresAuth: false,
+      overrideSettings: overrides,
     });
     const decoded = decodeJwt(result.access_token);
     const expiresAt = decoded?.exp ? decoded.exp * 1000 : Date.now() + 1000 * 60 * 60;
@@ -326,7 +308,7 @@ async function checkSchedules() {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  const { type, payload } = message;
+  const { type, payload, overrides } = message;
 
   const respond = (data, isError = false) => {
     sendResponse({ ok: !isError, data: isError ? undefined : data, error: isError ? data : undefined });
@@ -336,11 +318,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     try {
       switch (type) {
         case "register":
-          await registerUser(payload);
+          await registerUser(payload, overrides);
           respond({ success: true });
           break;
         case "login":
-          await loginUser(payload);
+          await loginUser(payload, overrides);
           respond({ success: true });
           break;
         case "logout":
@@ -375,19 +357,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           break;
         case "health_check":
           respond(await healthCheck(payload));
-          break;
-        case "test_registration":
-          // Test endpoint for debugging
-          try {
-            const settings = await getSettings();
-            console.log('Current settings:', settings);
-            console.log('Testing API connectivity...');
-            await healthCheck();
-            respond({ message: "API connectivity test successful" });
-          } catch (error) {
-            console.error('API test failed:', error);
-            respond({ message: `API test failed: ${error.message}` }, true);
-          }
           break;
         default:
           respond({ message: "Unknown message" }, true);
