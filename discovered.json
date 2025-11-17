@@ -1,86 +1,15 @@
 {
     "metadata": {
-        "base_url": "http://testphp.vulnweb.com",
-        "pages_crawled": 13,
-        "max_depth": 2,
+        "base_url": "https://example.com",
+        "pages_crawled": 1,
+        "max_depth": 1,
         "authenticated": false,
-        "crawl_time": "2025-09-23 11:29:08"
+        "crawl_time": "2025-11-17 19:20:16"
     },
     "discovered": {
         "links": [
-            "http://testphp.vulnweb.com",
-            "http://testphp.vulnweb.com/index.php",
-            "http://testphp.vulnweb.com/categories.php",
-            "http://testphp.vulnweb.com/artists.php",
-            "http://testphp.vulnweb.com/disclaimer.php",
-            "http://testphp.vulnweb.com/cart.php",
-            "http://testphp.vulnweb.com/guestbook.php",
-            "http://testphp.vulnweb.com/AJAX/index.php",
-            "http://testphp.vulnweb.com/login.php",
-            "http://testphp.vulnweb.com/userinfo.php",
-            "http://testphp.vulnweb.com/privacy.php",
-            "http://testphp.vulnweb.com/Mod_Rewrite_Shop",
-            "http://testphp.vulnweb.com/hpp"
+            "https://example.com"
         ],
-        "forms": [
-            {
-                "action": "http://testphp.vulnweb.com/search.php?test=query",
-                "method": "post",
-                "inputs": [
-                    {
-                        "name": "searchFor",
-                        "type": "text",
-                        "value": ""
-                    },
-                    {
-                        "name": "goButton",
-                        "type": "submit",
-                        "value": "go"
-                    }
-                ]
-            },
-            {
-                "action": "http://testphp.vulnweb.com/guestbook.php",
-                "method": "post",
-                "inputs": [
-                    {
-                        "name": "name",
-                        "type": "hidden",
-                        "value": "anonymous user"
-                    },
-                    {
-                        "name": "text",
-                        "type": "text",
-                        "value": ""
-                    },
-                    {
-                        "name": "submit",
-                        "type": "submit",
-                        "value": "add message"
-                    }
-                ]
-            },
-            {
-                "action": "http://testphp.vulnweb.com/userinfo.php",
-                "method": "post",
-                "inputs": [
-                    {
-                        "name": "uname",
-                        "type": "text",
-                        "value": ""
-                    },
-                    {
-                        "name": "pass",
-                        "type": "password",
-                        "value": ""
-                    },
-                    {
-                        "name": null,
-                        "type": "submit",
-                        "value": "login"
-                    }
-                ]
-            }
-        ]
+        "forms": []
     }
 }

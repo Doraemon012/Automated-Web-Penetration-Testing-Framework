@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Web Pentest Companion</title>
     <link rel="stylesheet" href="styles/tailwind.css" />
+    <link rel="stylesheet" href="styles/parity.css" />
   </head>
   <body class="app-shell">
     <main class="popup-shell">
@@ -107,25 +108,130 @@
           <span class="step-index">04</span>
           <div>
             <h2>Latest result</h2>
-            <p>Severity breakdown and quick export.</p>
+            <p>Matches the dashboard’s full analyst view.</p>
           </div>
           <div class="flex gap-2">
             <div class="btn-group btn-group-sm view-toggle" role="group">
               <button type="button" class="btn btn-muted text-xs active" id="website-view-btn">Website View</button>
-              <button type="button" class="btn btn-muted text-xs" id="summary-view-btn">Summary</button>
+              <button type="button" class="btn btn-muted text-xs" id="analyst-view-btn">Analyst View</button>
             </div>
-            <button id="downloadReport" class="btn btn-muted text-xs">Download JSON</button>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-muted text-xs" id="downloadJson">JSON</button>
+              <button type="button" class="btn btn-muted text-xs" id="downloadMarkdown">Markdown</button>
+            </div>
           </div>
         </div>
-        <div id="summaryView">
-          <div id="resultSummary" class="result-panel text-sm"></div>
-          <div>
-            <h3 class="text-xs uppercase tracking-wide text-slate-400 mb-2">Severity mix</h3>
-            <div id="severityBadges" class="flex flex-wrap gap-2"></div>
+
+        <div class="result-summary-grid">
+          <div class="summary-card">
+            <p class="summary-label">Total Findings</p>
+            <p id="totalVulns" class="summary-value">0</p>
+          </div>
+          <div class="summary-card">
+            <p class="summary-label">High Severity</p>
+            <p id="highVulns" class="summary-value text-high">0</p>
+          </div>
+          <div class="summary-card">
+            <p class="summary-label">Medium Severity</p>
+            <p id="mediumVulns" class="summary-value text-medium">0</p>
+          </div>
+          <div class="summary-card">
+            <p class="summary-label">Low Severity</p>
+            <p id="lowVulns" class="summary-value text-low">0</p>
           </div>
         </div>
-        <div id="websiteFindingsView" class="website-findings-wrapper"></div>
+
+        <div id="enhancedMetrics" class="result-summary-grid hidden">
+          <div class="summary-card metric-danger">
+            <p class="summary-label">Avg CVSS</p>
+            <p id="avgCvss" class="summary-value">0.0</p>
+          </div>
+          <div class="summary-card metric-warning">
+            <p class="summary-label">Critical Priority</p>
+            <p id="criticalPriority" class="summary-value">0</p>
+          </div>
+          <div class="summary-card metric-info">
+            <p class="summary-label">With Exploits</p>
+            <p id="withExploit" class="summary-value">0</p>
+          </div>
+          <div class="summary-card metric-success">
+            <p class="summary-label">High Confidence</p>
+            <p id="highConfidence" class="summary-value">0</p>
+          </div>
+        </div>
+
+        <div class="result-panel text-sm" id="resultSummary"></div>
+        <div class="severity-mix">
+          <h3 class="text-xs uppercase tracking-wide text-slate-400 mb-2">Severity mix</h3>
+          <div id="severityBadges" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="view-panels">
+          <div id="websiteFindingsView" class="website-findings-wrapper"></div>
+          <div id="analystViewPanel" class="hidden">
+            <div class="vulnerability-container">
+              <div class="vulnerability-list-panel" id="listPanel">
+                <div id="vulnerabilityAccordion"></div>
+              </div>
+              <div class="vulnerability-detail-panel" id="detailPanel">
+                <div class="detail-header-controls">
+                  <button class="btn btn-muted text-xs" id="prevVuln" title="Previous">
+                    <span>&larr;</span>
+                  </button>
+                  <div class="flex gap-2 ml-auto">
+                    <button class="btn btn-muted text-xs" id="openImmersive" title="Open immersive overview">
+                      Immersive
+                    </button>
+                    <button class="btn btn-muted text-xs" id="expandMinimizeBtn" title="Expand">
+                      Expand
+                    </button>
+                  </div>
+                  <button class="btn btn-muted text-xs" id="nextVuln" title="Next">
+                    <span>&rarr;</span>
+                  </button>
+                </div>
+                <div class="detail-content" id="detailContent"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
+
+      <div id="immersivePanel" class="immersive-panel hidden">
+        <div class="immersive-header" id="immersiveHandle">
+          <div class="immersive-title">
+            <span id="immersiveSeverity" class="badge">Severity</span>
+            <h4 id="immersiveTitle">Vulnerability Insight</h4>
+          </div>
+          <div class="immersive-actions">
+            <button class="btn btn-muted text-xs" id="pinImmersive" title="Pin panel">
+              Pin
+            </button>
+            <button class="btn btn-danger text-xs" id="closeImmersive" title="Close">
+              Close
+            </button>
+          </div>
+        </div>
+        <div class="immersive-body">
+          <div class="immersive-meta" id="immersiveMeta"></div>
+          <div class="immersive-section">
+            <h6>What We Found</h6>
+            <div id="immersiveWhat" class="text-slate-300"></div>
+          </div>
+          <div class="immersive-section">
+            <h6>How It Works</h6>
+            <div id="immersiveHow" class="text-slate-300"></div>
+          </div>
+          <div class="immersive-section">
+            <h6>Remediation</h6>
+            <div id="immersivePrevention" class="text-slate-300"></div>
+          </div>
+          <div class="immersive-section">
+            <h6>Affected Endpoints</h6>
+            <div id="immersiveOccurrences"></div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <template id="historyItemTemplate">
